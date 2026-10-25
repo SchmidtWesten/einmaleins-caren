@@ -8,6 +8,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
   <title>1×1 Training mit Caren – Einmaleins-Trainer</title>
   <style>
     :root {
@@ -33,13 +35,10 @@
     [hidden] { display: none !important; }
     .shell { max-width: 920px; margin: 0 auto; padding: 25px 18px 55px; }
     .hero { display: flex; align-items: center; gap: 14px; padding-bottom: 24px; }
-    .logo { width: 78px; height: 66px; flex: none; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #fff; background: var(--turquoise); box-shadow: 0 10px 20px rgba(14, 119, 118, .22); padding: 6px 4px 5px; }
-    .logo-main { font-size: 24px; font-weight: 900; letter-spacing: -1.8px; line-height: 1; }
-    .logo-sub { font-size: 11px; font-weight: 850; letter-spacing: .8px; line-height: 1; }
+    .logo-brand { width: 72px; height: 72px; flex: none; object-fit: contain; filter: drop-shadow(0 5px 8px rgba(14, 119, 118, .17)); }
     .hero h1 { margin: 0; font-size: clamp(25px, 5vw, 36px); letter-spacing: -.9px; line-height: 1.15; }
     .hero p { margin: 5px 0 0; font-size: 14px; color: var(--muted); }
     .home-link { width: 100%; display: flex; align-items: center; gap: 14px; padding: 0; border: 0; background: none; color: inherit; text-align: left; border-radius: 18px; cursor: pointer; }
-    .home-link:hover .logo { background: var(--turquoise-dark); }
     .home-link:focus-visible { outline: 3px solid var(--turquoise); outline-offset: 5px; }
     .home-link .hero-title { min-width: 0; }
     .panel { border: 1px solid var(--line); background: #ffffffed; border-radius: 25px; box-shadow: var(--shadow); padding: clamp(20px, 3.5vw, 32px); }
@@ -218,9 +217,7 @@
     @media (max-width: 660px) {
       .shell { padding: 18px 13px 38px; }
       .hero { padding-left: 3px; }
-      .logo { height: 61px; width: 74px; border-radius: 16px; padding: 5px 4px 4px; }
-      .logo-main { font-size: 22px; }
-      .logo-sub { font-size: 10px; }
+      .logo-brand { width: 68px; height: 68px; }
       .series-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
       .mode-grid { grid-template-columns: 1fr; gap: 10px; }
       .mode-card { min-height: 91px; flex-direction: row; align-items: center; gap: 12px; padding: 14px 17px; }
@@ -400,7 +397,7 @@
   <div class="shell">
     <header class="hero">
       <button class="home-link" type="button" id="homeButton" aria-label="Zur Startauswahl zurückkehren" title="Zur Startauswahl">
-        <span class="logo" aria-hidden="true"><span class="logo-main">1×1</span><span class="logo-sub">START</span></span>
+        <img class="logo-brand" src="./logo.png" alt="" aria-hidden="true" width="72" height="72">
         <span class="hero-title"><h1>1×1 Training mit Caren</h1><p>📘 Lernen &nbsp;▪︎&nbsp; ✏️ Üben &nbsp;▪︎&nbsp; 🌟 Stolz sein! <span class="profile-name-top" id="headerChildName"></span></p></span>
       </button>
     </header>

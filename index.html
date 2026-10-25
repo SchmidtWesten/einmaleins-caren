@@ -327,33 +327,35 @@
       .skill-legend { gap: 6px 9px; font-size: 11px; }
       .skill-legend span { white-space: nowrap; }
     }
-    /* Reihenfolge nur im Lernmodus; kleine, klar getrennte Auswahl direkt unter Lernen. */
-    .learn-mode-group { min-width: 0; display: flex; flex-direction: column; gap: 9px; }
-    .learn-mode-group > .mode-card { flex: none; }
-    .learning-order { background: #f8fcf8; border: 1px solid #d9ebe5; border-radius: 17px; padding: 10px; }
-    .learning-order-title { color: #496663; font-size: 12px; font-weight: 850; margin: 0 0 8px; }
-    .learning-order-choices { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 7px; }
-    .learning-order-option { min-width: 0; display: flex; flex-direction: column; justify-content: center; align-items: center;
-      gap: 6px; padding: 9px 4px; border: 2px solid #d3e2da; border-radius: 12px; background: white; color: #173939; }
+    /* V27: Beide Lernreihenfolge-Tasten liegen innerhalb EINER grünen Lernkarte.
+       Starttaste und Einstellungs-Tasten bleiben unabhängig klickbar. */
+    .learn-mode-group { min-width: 0; background: #dff5ec; border-radius: 22px; overflow: hidden; }
+    .learn-mode-group > .mode-card.learn { background: transparent; min-height: 95px; border-radius: 22px 22px 0 0; }
+    .learning-order { background: transparent; border: 0; padding: 0 17px 17px; }
+    .learning-order-title { color: #496663; font-size: 14px; font-weight: 750; margin: 0 0 9px; }
+    .learning-order-choices { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 9px; }
+    .learning-order-option { min-width: 0; min-height: 72px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+      gap: 5px; padding: 8px 5px; border: 2px solid #cbded7; border-radius: 14px; background: #fff; color: #173939; }
     .learning-order-option.is-active { background: #ffead3; border-color: #cf995f; }
     .learning-order-option:focus-visible { outline: 3px solid #0e7776; outline-offset: 2px; }
-    .learning-order-name { font-size: clamp(10px, 1.6vw, 12px); font-weight: 850; line-height: 1.25; text-align: center; }
-    .learning-order-example { font-size: clamp(12px, 1.7vw, 15px); font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
-    .mixed-example { display: inline-flex; align-items: center; justify-content: center; gap: clamp(4px, 1vw, 10px); }
-    .learning-order-divider { display: inline-block; color: #9d6b40; font-weight: 950; font-size: 17px; padding: 0 2px; }
-    @media (max-width: 660px) {
-      .learning-order { padding: 10px 12px; }
-      .learning-order-name { font-size: clamp(11px, 3.5vw, 13px); }
-      .learning-order-example { font-size: clamp(13px, 3.7vw, 16px); }
-      .learning-order-option { padding: 10px 6px; }
-      .mixed-example { gap: 9px; }
+    .learning-order-name { font-size: 12px; font-weight: 750; line-height: 1.2; text-align: center; }
+    .learning-order-example { font-size: clamp(14px, 2.1vw, 18px); font-weight: 850; line-height: 1.2; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .mixed-example { display: inline-flex; align-items: center; justify-content: center; gap: clamp(2px, .7vw, 7px); }
+    .learning-order-divider { display: inline-block; color: #9d6b40; font-weight: 950; font-size: 17px; padding: 0 1px; }
+    @media (max-width: 780px) {
+      .learn-mode-group > .mode-card.learn { min-height: 91px; }
+      .learning-order { padding: 0 17px 15px; }
+      .learning-order-example { font-size: clamp(15px, 4vw, 18px); }
+    }
+    @media (min-width: 781px) {
+      /* Bei schmalen Desktop-Spalten stehen die Einstellungen untereinander. */
+      .learning-order-choices { grid-template-columns: 1fr; }
     }
     @media (max-width: 340px) {
-      .learning-order { padding: 8px; }
+      .learning-order { padding: 0 11px 13px; }
       .learning-order-choices { gap: 6px; }
-      .learning-order-name { font-size: 11px; }
-      .learning-order-example { font-size: 12px; }
-      .mixed-example { gap: 3px; }
+      .learning-order-example { font-size: 14px; }
+      .mixed-example { gap: 2px; }
     }
 
     /* V24: Fünf Kinder, kinderfreundliche Modiauswahl und Pokalsammlung. */
@@ -434,14 +436,14 @@
               <span class="arrow" aria-hidden="true">→</span>
             </button>
             <div class="learning-order" role="group" aria-labelledby="learningOrderLabel">
-              <div class="learning-order-title" id="learningOrderLabel">Reihenfolge der Zahlen</div>
+              <div class="learning-order-title" id="learningOrderLabel">Du kannst wählen:</div>
               <div class="learning-order-choices">
-                <button type="button" class="learning-order-option is-active" data-order="back" aria-pressed="true">
-                  <span class="learning-order-name">Reihenzahl hinten</span>
-                  <span class="learning-order-example">3 × 7</span>
+                <button type="button" class="learning-order-option is-active" data-order="back" aria-pressed="true" aria-label="Nur Reihenzahl hinten, wie 3 mal 7">
+                  <span class="learning-order-name">für 7er</span>
+                  <span class="learning-order-example">nur 3 × 7</span>
                 </button>
-                <button type="button" class="learning-order-option" data-order="mixed" aria-pressed="false">
-                  <span class="learning-order-name">Gemischt</span>
+                <button type="button" class="learning-order-option" data-order="mixed" aria-pressed="false" aria-label="Beide Reihenfolgen, wie 3 mal 7 oder 7 mal 3">
+                  <span class="learning-order-name">für 7er</span>
                   <span class="learning-order-example mixed-example"><span>3 × 7</span><span class="learning-order-divider" aria-hidden="true">|</span><span>7 × 3</span></span>
                 </button>
               </div>

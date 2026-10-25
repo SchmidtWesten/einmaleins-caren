@@ -1,0 +1,1838 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e7776">
+  <meta name="description" content="1×1 Training mit Caren: frei wählbare Reihen, Lernmodus, 10 Fragen, 60 Sekunden und Einmaleins-Tabelle. Auch offline nutzbar.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <title>1×1 Training mit Caren – Einmaleins-Trainer</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #163337;
+      --muted: #607577;
+      --turquoise: #0e7776;
+      --turquoise-dark: #085d5b;
+      --mint: #e4f7f1;
+      --cream: #fbfbf5;
+      --white: #fff;
+      --coral: #eb786a;
+      --yellow: #ffcf72;
+      --line: #dfeae6;
+      --shadow: 0 18px 50px rgba(24, 63, 60, .09);
+    }
+    * { box-sizing: border-box; }
+    html { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; }
+    body { margin: 0; color: var(--ink); min-height: 100dvh; background: radial-gradient(ellipse at 12% 0%, #e6f6ef 0, transparent 38%), radial-gradient(ellipse at 95% 40%, #fff0d9 0, transparent 34%), var(--cream); }
+    button { font: inherit; cursor: pointer; }
+    button:focus-visible { outline: 4px solid #ffaf52; outline-offset: 3px; }
+    button:disabled { opacity: .42; cursor: not-allowed; }
+    [hidden] { display: none !important; }
+    .shell { max-width: 920px; margin: 0 auto; padding: 25px 18px 55px; }
+    .hero { display: flex; align-items: center; gap: 14px; padding-bottom: 24px; }
+    .logo { width: 78px; height: 66px; flex: none; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #fff; background: var(--turquoise); box-shadow: 0 10px 20px rgba(14, 119, 118, .22); padding: 6px 4px 5px; }
+    .logo-main { font-size: 24px; font-weight: 900; letter-spacing: -1.8px; line-height: 1; }
+    .logo-sub { font-size: 11px; font-weight: 850; letter-spacing: .8px; line-height: 1; }
+    .hero h1 { margin: 0; font-size: clamp(25px, 5vw, 36px); letter-spacing: -.9px; line-height: 1.15; }
+    .hero p { margin: 5px 0 0; font-size: 14px; color: var(--muted); }
+    .home-link { width: 100%; display: flex; align-items: center; gap: 14px; padding: 0; border: 0; background: none; color: inherit; text-align: left; border-radius: 18px; cursor: pointer; }
+    .home-link:hover .logo { background: var(--turquoise-dark); }
+    .home-link:focus-visible { outline: 3px solid var(--turquoise); outline-offset: 5px; }
+    .home-link .hero-title { min-width: 0; }
+    .panel { border: 1px solid var(--line); background: #ffffffed; border-radius: 25px; box-shadow: var(--shadow); padding: clamp(20px, 3.5vw, 32px); }
+    .panel + .panel { margin-top: 19px; }
+    h2 { margin: 0 0 8px; font-size: clamp(19px, 3.4vw, 24px); letter-spacing: -.3px; }
+    .subtext { color: var(--muted); font-size: 15px; line-height: 1.45; margin: 0 0 20px; }
+    .series-grid { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 9px; }
+    .series-button { min-height: 52px; border: 2px solid var(--line); border-radius: 15px; background: #fff; color: var(--ink); font-size: 20px; font-weight: 800; transition: background .12s, transform .12s; }
+    .series-button.is-selected { background: var(--turquoise); border-color: var(--turquoise); color: white; }
+    .series-button:active, .number-key:active, .mode-card:active { transform: scale(.96); }
+    .selection-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 13px; margin-top: 18px; }
+    .selection-info { font-weight: 750; color: var(--turquoise-dark); font-size: 14px; }
+    .selection-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .subtle-button { border: 1.5px solid #cbded7; background: #fff; border-radius: 999px; padding: 10px 15px; font-weight: 750; color: var(--ink); }
+    .subtle-button:hover { background: #f2f9f5; }
+    .hard-four-start { margin-top: 17px; display: flex; flex-wrap: wrap; width: 100%; align-items: center; justify-content: center; gap: 6px 14px;
+      padding: 12px 14px; border: 2px solid #d9c8a0; border-radius: 14px; color: #544228; background: #fff9e8; font-weight: 800; }
+    .hard-four-start:hover { background: #fff1cf; }
+    .hard-four-start .hard-four-label { white-space: nowrap; font-size: 15px; }
+    .hard-four-start .hard-four-equations { font-size: 14px; font-weight: 750; white-space: nowrap; }
+    .section-label { margin: 26px 3px 15px; font-weight: 850; font-size: 21px; }
+    .mode-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 11px; }
+    .mode-card { width: 100%; text-align: left; min-height: 166px; padding: 19px; border: 1px solid transparent; border-radius: 22px; display: flex; flex-direction: column; align-items: flex-start; transition: transform .1s, filter .15s; }
+    .mode-card:hover:not(:disabled) { filter: brightness(.98); }
+    .mode-card.learn { background: #dff5ec; }
+    .mode-card.test { background: #ffedd9; }
+    .mode-card.practice { background: #e4f1ff; }
+    .mode-card.speed { background: #fbe4e1; }
+    .mode-emoji { font-size: 32px; display: block; height: 44px; }
+    .mode-name { font-size: 20px; font-weight: 850; display: block; }
+    .mode-desc { color: #4a6264; font-size: 14px; margin-top: 7px; line-height: 1.38; }
+    .arrow { margin-top: auto; align-self: flex-end; font-size: 24px; font-weight: 900; }
+    .table-promo { margin-top: 19px; border: 1.5px solid #cfebe6; background: #fff; border-radius: 21px; padding: 17px 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .table-promo h2 { font-size: 18px; margin-bottom: 5px; }
+    .table-promo p { margin: 0; font-size: 13px; color: var(--muted); }
+    .primary, .outline { border-radius: 14px; min-height: 46px; font-weight: 800; padding: 11px 16px; }
+    .primary { background: var(--turquoise); color: #fff; border: 2px solid var(--turquoise); }
+    .primary:hover:not(:disabled) { background: var(--turquoise-dark); border-color: var(--turquoise-dark); }
+    .outline { background: #fff; border: 2px solid #bfded7; color: var(--turquoise-dark); }
+    .footer-note { text-align: center; font-size: 12px; color: var(--muted); margin: 25px 0 0; }
+    /* Die Löschfunktion ist bewusst deutlich weniger auffällig als die Übungsangebote. */
+    .reset-footer { text-align: center; margin: 54px 0 0; padding-top: 20px; border-top: 1px solid #e8ebe7; }
+    .reset-trigger { display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; max-width: 100%; padding: 8px 12px; background: transparent; border: 1px solid #dce3df;
+      border-radius: 9px; color: #7f8c8c; font-size: 12px; line-height: 1.35; font-weight: 450;
+      text-align: center; box-shadow: none; }
+    .reset-trigger:hover { background: #f8faf8; border-color: #c9d5d0; color: #485859; }
+    .reset-trigger .reset-adult-note { font-size: inherit; font-weight: inherit; }
+    .reset-status { margin: 10px auto 0; max-width: 510px; font-size: 13px; color: #076042; }
+    .reset-scope { margin: 12px 0 16px; padding: 10px 12px; border: 1px solid #e4e8e5; border-radius: 12px; }
+    .reset-scope legend { padding: 0 5px; font-weight: 800; font-size: 15px; }
+    .reset-option { display: flex; gap: 11px; align-items: center; padding: 9px 2px; font-size: 15px; }
+    .reset-option + .reset-option { border-top: 1px solid #edf1ee; }
+    .reset-option input { accent-color: var(--turquoise); height: 20px; width: 20px; flex: none; }
+    .reset-details { font-size: 12px; color: #647474; display: block; margin-top: 2px; }
+    .reset-scope-desc { font-size: 13px !important; color: #617575; }
+    .award-progress { margin: 22px 0 0; padding: 12px 5px; text-align: center; font-size: 13px; line-height: 1.45; color: #5c6e70; }
+    .award-progress-heading { font-weight: 900; color: #16635b; font-size: 16px; margin-bottom: 7px; }
+    .award-progress-details { display: grid; grid-template-columns: 48px max-content;
+      gap: 4px 12px; justify-content: center; align-items: baseline; margin: 0 auto;
+      width: max-content; max-width: 100%; font-size: 12px; line-height: 1.45; }
+    .award-progress-details .award-count { color: #16635b; font-weight: 900;
+      text-align: right; font-variant-numeric: tabular-nums; }
+    .award-progress-details .award-target { color: #5c6e70; font-weight: 750; text-align: left; }
+    .hard-four-progress { font-size: 12px; font-weight: 900; border-radius: 999px; padding: 3px 8px; background: #f1ead4; color: #684a1c; }
+    .hard-four-start.stage-red { border-color: #dc6a68; }
+    .hard-four-start.stage-orange { border-color: #e2a079; }
+    .hard-four-start.stage-yellow { border-color: #d3b34b; }
+    .hard-four-start.stage-lime { border-color: #8cae6c; }
+    .hard-four-start.stage-green { border-color: #47a06d; }
+    .hard-four-start.stage-master { border-color: #087b4a; border-width: 4px; }
+    .award-card { margin-top: 20px; padding: 20px 16px 24px; text-align: center; border-radius: 24px; border: 3px solid #eab84b; background: linear-gradient(155deg, #fff8dc, #fffdf2 54%, #f9ecd0); box-shadow: 0 13px 36px #a9852c27; }
+    .award-cup { font-size: clamp(78px, 20vw, 125px); line-height: 1.13; filter: drop-shadow(0 7px 8px #ad791a4d); }
+    .award-card h2 { margin: 6px 0; font-size: clamp(23px, 6vw, 31px); color: #81500b; }
+    .award-card p { margin: 8px auto 0; font-weight: 750; line-height: 1.4; color: #735418; max-width: 500px; }
+    .award-dates { font-size: 14px; font-weight: 700 !important; line-height: 1.55 !important; white-space: pre-line; }
+    #awardDialogDays { white-space: pre-line; }
+    .award-shelf { display: grid; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); gap: 10px; margin: 19px auto 0; max-width: 555px; }
+    .award-mini { border: 1px solid #e9d6a5; border-radius: 15px; background: #fffefa; padding: 10px 5px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .award-mini .emoji { font-size: 36px; line-height: 1.1; }
+    .award-mini strong { color: #7a4e0d; font-size: 13px; }
+    .award-mini small { color: #826b3c; font-size: 11px; }
+    .award-dialog { max-height: calc(100dvh - 24px); overflow-y: auto; border: 0; border-radius: 25px; padding: 22px; width: min(490px, calc(100% - 24px)); background: #fffdf2; color: #603f0d; text-align: center; box-shadow: 0 24px 65px #24190250; }
+    .award-dialog::backdrop { background: #142a2abb; }
+    .award-dialog .award-cup { font-size: 105px; }
+    .award-dialog h2 { font-size: 28px; margin: 3px 0 12px; }
+    .award-dialog p { line-height: 1.45; }
+    .reset-dialog { max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; width: min(470px, calc(100% - 24px)); padding: 23px 20px; border: 1px solid #e1e6e3; border-radius: 20px; box-shadow: 0 18px 60px #162c3044; color: var(--ink); background: #fff; }
+    .reset-dialog::backdrop { background: #112e3277; }
+    .reset-dialog h2 { font-size: 22px; margin: 0 0 14px; }
+    .reset-dialog p { font-size: 15px; line-height: 1.45; margin: 0 0 12px; }
+    .reset-warning { color: #a32929; font-weight: 800; }
+    .reset-confirm-check { display: flex; align-items: flex-start; gap: 10px; margin: 16px 0; padding: 13px; border: 1px solid #e4e8e5; border-radius: 12px; font-size: 14px; line-height: 1.4; }
+    .reset-confirm-check input { width: 19px; height: 19px; flex: none; accent-color: var(--turquoise); }
+    .reset-label { display: block; font-size: 14px; margin-bottom: 7px; font-weight: 700; }
+    .reset-word { width: 100%; padding: 12px; min-height: 48px; border-radius: 11px; border: 2px solid #bccdc8; font: inherit; text-transform: uppercase; }
+    .reset-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 20px; }
+    .reset-danger { background: #a52c2c; color: #fff; border: 2px solid #a52c2c; border-radius: 13px; min-height: 46px; padding: 9px 12px; font-weight: 800; }
+    .reset-danger:not(:disabled):hover { background: #811b1b; }
+    .reset-danger:disabled { opacity: .35; }
+    .practice-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: space-between; margin-bottom: 17px; }
+    .back-button { background: transparent; border: none; color: var(--turquoise-dark); font-weight: 800; padding: 8px 0; }
+    .practice-series { font-size: 13px; color: var(--muted); max-width: 70%; text-align: right; }
+    .practice-panel { max-width: 630px; margin: 0 auto; text-align: center; }
+    .practice-mode { font-weight: 850; color: var(--turquoise-dark); margin: 0; font-size: 20px; line-height: 1.18; }
+    .practice-progress { font-size: 15px; color: var(--muted); margin-top: 3px; min-height: 20px; font-variant-numeric: tabular-nums; }
+    .practice-progress.test-progress { display: flex; align-items: center; justify-content: center; gap: 15px; }
+    .test-progress-divider { font-weight: 900; color: var(--turquoise-dark); font-size: 19px; line-height: 1; }
+    .progress-track { height: 9px; border-radius: 20px; background: #e7efeb; overflow: hidden; margin: 14px 0 4px; }
+    .progress-fill { height: 100%; background: var(--turquoise); width: 0; transition: width .22s; }
+    /* Beim Zeittraining wächst die farbige Strecke von links nach rechts.
+       Nach 30 s: Hälfte grün. Nach 50 s: 5/6 voll, gelb. Letzte 10 s rot. */
+    .timer-track .progress-fill {
+      width: 100%;
+      background: linear-gradient(to right,
+        #19c862 0%, #19c862 50%,
+        #f4cf28 50%, #f4cf28 83.333333%,
+        #e8413b 83.333333%, #e8413b 100%);
+      clip-path: inset(0 calc(100% - var(--elapsed, 0%)) 0 0);
+      transition: clip-path .1s linear;
+    }
+    .question-box { margin: 12px 0; padding: 21px 14px; border-radius: 22px; background: #f5faf6; border: 1px solid #e2eee7; }
+    .question { font-weight: 900; font-size: clamp(43px, 10vw, 75px); letter-spacing: -2px; line-height: 1.32; font-variant-numeric: tabular-nums; }
+    .question .multiply { color: var(--coral); }
+    .answer-caption { font-size: 13px; color: var(--muted); margin: 6px 0 9px; }
+    .answer-display { font-size: 39px; font-weight: 900; background: white; border: 2.5px solid #bcded5; border-radius: 17px; width: min(230px, 100%); height: 69px; margin: 0 auto; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+    .answer-display.empty { color: #adbeb9; }
+    .keypad { width: min(345px, 100%); margin: 18px auto 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+    .number-key { min-height: 61px; border: 1.5px solid #d7e6e0; background: #fff; border-radius: 15px; font-size: 26px; font-weight: 850; color: var(--ink); touch-action: manipulation; }
+    .number-key.erase { font-size: 21px; background: #f7f8f4; }
+    .number-key.enter { font-size: 20px; color: white; background: var(--turquoise); border-color: var(--turquoise); }
+    .number-key:disabled { opacity: .5; }
+    .feedback { min-height: 49px; padding: 11px 8px 2px; font-size: 17px; font-weight: 800; }
+    .feedback.correct { color: #087d5f; }
+    .feedback.wrong { color: #b34c35; }
+    .feedback.hint { color: var(--turquoise-dark); font-size: 15px; font-weight: 650; line-height: 1.5; }
+    .under-actions { min-height: 56px; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 12px; padding-top: 9px; }
+    .result-panel { text-align: center; max-width: 670px; margin: 0 auto; }
+    .trophy { font-size: 61px; margin-bottom: 12px; }
+    .result-score { font-size: 52px; font-weight: 900; color: var(--turquoise-dark); margin: 12px 0; line-height: 1.15; }
+    .result-grade { color: #075f47; font-size: clamp(27px, 6vw, 35px); font-weight: 900; margin: 5px 0 12px; }
+    .grade-scale { font-size: 12px; color: var(--muted); line-height: 1.65; max-width: 480px; margin: 15px auto 0; }
+    .result-description { font-size: 16px; color: var(--muted); line-height: 1.5; margin: 0 auto 10px; max-width: 470px; white-space: pre-line; }
+    /* Kurze, freiwillige Lernpause nach 15, 20, 25 ... erledigten Aufgaben. */
+    .learn-break { padding: 18px 10px 8px; text-align: center; }
+    .learn-break .break-emoji { font-size: 47px; margin-bottom: 9px; }
+    .learn-break h2 { font-size: clamp(22px, 5.3vw, 29px); color: var(--turquoise-dark); margin: 0 0 7px; }
+    .learn-break p { font-size: 17px; margin: 0 0 22px; }
+    .learn-break-buttons { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
+    .learn-break-buttons button { min-width: 145px; min-height: 51px; }
+
+    .result-next-idea { font-size: 15px; color: var(--turquoise-dark); line-height: 1.45; font-weight: 750; margin: 0 auto 24px; max-width: 430px; }
+    .result-buttons { display: flex; justify-content: center; flex-wrap: wrap; gap: 11px; }
+    .mistakes { text-align: left; margin: 27px auto 0; border-top: 1px solid var(--line); padding-top: 18px; max-width: 460px; }
+    .mistakes h3 { margin: 0 0 10px; font-size: 17px; }
+    .mistakes ul { margin: 0; padding-left: 24px; line-height: 1.8; font-size: 15px; }
+    dialog { padding: 0; width: min(830px, calc(100% - 22px)); max-height: calc(100dvh - 24px); border: none; border-radius: 22px; box-shadow: 0 25px 75px #112e32a0; color: var(--ink); overflow: hidden; }
+    dialog::backdrop { background: rgba(17, 43, 45, .5); }
+    .dialog-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 19px 20px 14px; }
+    .dialog-head h2 { margin: 0; }
+    .close-button { width: 41px; height: 41px; background: #f4f7f4; border: none; border-radius: 50%; font-size: 23px; }
+    .dialog-body { padding: 0 15px 20px; overflow: auto; max-height: calc(100dvh - 98px); }
+    .table-tip { font-size: 13px; color: var(--muted); margin: 0 0 12px 5px; }
+    .table-highlight { border-radius: 11px; background: #eaf7f1; padding: 12px; text-align: center; font-size: 20px; font-weight: 850; color: var(--turquoise-dark); margin-bottom: 12px; min-height: 52px; }
+    .table-scroll { width: 100%; overflow-x: auto; overflow-y: auto; max-height: min(63dvh, 560px); border: 1px solid var(--line); border-radius: 12px; }
+    .times-table { border-collapse: separate; border-spacing: 0; min-width: 620px; width: 100%; text-align: center; font-variant-numeric: tabular-nums; }
+    .times-table th, .times-table td { height: 45px; min-width: 46px; border-bottom: 1px solid #e4eeea; border-right: 1px solid #e4eeea; padding: 0; }
+    .times-table th { background: #d7f0e6; color: #185d54; font-weight: 850; position: sticky; z-index: 1; top: 0; }
+    .times-table tbody th { position: sticky; left: 0; z-index: 2; }
+    .times-table thead th:first-child { position: sticky; left: 0; z-index: 3; background: var(--turquoise); color: white; }
+    .times-table td button { font-weight: 750; width: 100%; height: 100%; background: transparent; border: 0; border-radius: 0; color: var(--ink); font-size: 15px; }
+    .times-table td.active-line { background: #fdf1d1; }
+    .times-table td.active-cell { background: #ffc976; }
+    .times-table td.active-cell button { font-weight: 950; font-size: 18px; }
+    @media (max-width: 780px) { .mode-grid { grid-template-columns: 1fr; } .mode-card { min-height: 95px; flex-direction: row; align-items: center; gap: 12px; padding: 14px 17px; } .mode-text { flex: 1; } .mode-emoji { height: auto; width: 39px; } .mode-card .arrow { align-self: auto; margin: 0; } }
+    @media (max-width: 660px) {
+      .shell { padding: 18px 13px 38px; }
+      .hero { padding-left: 3px; }
+      .logo { height: 61px; width: 74px; border-radius: 16px; padding: 5px 4px 4px; }
+      .logo-main { font-size: 22px; }
+      .logo-sub { font-size: 10px; }
+      .series-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+      .mode-grid { grid-template-columns: 1fr; gap: 10px; }
+      .mode-card { min-height: 91px; flex-direction: row; align-items: center; gap: 12px; padding: 14px 17px; }
+      .mode-emoji { font-size: 30px; height: auto; width: 39px; }
+      .mode-text { flex: 1; }
+      .mode-name { font-size: 18px; }
+      .mode-desc { margin-top: 2px; font-size: 13px; }
+      .arrow { margin: 0; align-self: auto; }
+      .table-promo { padding: 15px; }
+      .table-promo .primary { font-size: 13px; padding: 9px 11px; }
+      .practice-panel { padding: 14px 13px 20px; }
+      .question-box { margin: 11px 0; padding: 15px 10px; }
+      .keypad { margin-top: 14px; gap: 7px; }
+      .number-key { min-height: 56px; }
+    }
+    @media (max-width: 360px) {
+      .hero h1 { font-size: 24px; }
+      .hero p { font-size: 12px; }
+      .series-button { min-height: 45px; }
+      .selection-footer { justify-content: center; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+
+    /* Sichtbarer Lernstand: rot → gelb → grün. Auswahlfarbe bleibt getrennt. */
+    .series-button { border-width: 3px; min-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 5px 1px; line-height: 1.1; }
+    .series-button .series-number { font-size: 20px; font-weight: 900; }
+    .series-button .series-percent { font-size: 10px; font-weight: 750; opacity: .78; }
+    .series-button.stage-red { border-color: #dc6a68; }
+    .series-button.stage-orange { border-color: #e2a079; }
+    .series-button.stage-yellow { border-color: #d3b34b; }
+    .series-button.stage-lime { border-color: #8cae6c; border-width: 4px; }
+    .series-button.stage-green { border-color: #47a06d; border-width: 4px; }
+    .series-button.stage-master { border-color: #087b4a; border-width: 5px; }
+    .series-button.is-selected { background: #e2f5ef; color: #075953; box-shadow: inset 0 0 0 1px #0e777648; }
+    .series-button.is-selected .series-number::after { content: '✓'; color: #0e7776; font-size: 12px; padding-left: 3px; vertical-align: middle; }
+    .skill-legend { margin: 14px 0 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; color: var(--muted); font-size: 12px; }
+    .skill-legend span { white-space: nowrap; }
+    .legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: baseline; }
+    .legend-dot.red { background: #dc6a68; }
+    .legend-dot.yellow { background: #d3b34b; }
+    .legend-dot.green { background: #087b4a; }
+    .skill-note { margin: 8px 0 0; color: var(--muted); font-size: 12px; }
+    .question-box { padding-top: 20px; }
+    .question { font-size: clamp(47px, 11vw, 78px); }
+    .answer-display { background: #eaf6fa; border-color: #b0d9da; min-height: 76px; font-size: 44px; transition: border-color .12s, background .12s; }
+    .answer-display.empty { color: #a2b8b6; }
+    .answer-display.correct { color: #086a42; background: #e0f7e9; border-color: #2eac71; }
+    .answer-display.wrong { color: #b32626; background: #fff0ef; border-color: #d35650; }
+    .feedback { min-height: 52px; line-height: 1.35; }
+    .feedback.wrong { color: #ad3127; }
+    /* Die Rückmeldung ersetzt "Deine Antwort" oberhalb des Ergebnisfeldes.
+       Die Zeilenhöhe bleibt mit und ohne Text immer gleich: kein Springen der Tastatur. */
+    .question-box .answer-caption.feedback {
+      display: block;
+      height: 26px;
+      min-height: 26px;
+      line-height: 26px;
+      padding: 0;
+      margin: 6px 0 9px;
+      font-size: clamp(12px, 3.5vw, 15px);
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .question-box.show-solution { background: #e7f8ee; border: 2px solid #5aa982; padding: 20px 12px 24px; }
+    /* Fehlversuche erscheinen nur nach zwei Fehlern im 10-Fragen-Modus.
+       Sie stehen über der richtigen Lösung, nie unter der Tastatur. */
+    .wrong-attempts {
+      margin: 3px auto 10px;
+      color: #b32626;
+      font-size: clamp(15px, 4.2vw, 19px);
+      line-height: 1.4;
+      font-weight: 850;
+      font-variant-numeric: tabular-nums;
+    }
+    .remember-label { font-weight: 900; font-size: clamp(19px, 5vw, 25px); color: #087045; margin: 0 0 8px; }
+    .question-box.show-solution .question { color: #075b38; font-size: clamp(42px, 11.5vw, 78px); line-height: 1.16; letter-spacing: -1.3px; white-space: nowrap; }
+    .question-box.show-solution .question .multiply { color: #075b38; }
+    .remember-note { font-size: clamp(15px, 3.5vw, 18px); line-height: 1.4; font-weight: 750; color: #225d49; max-width: 360px; margin: 13px auto 0; }
+    .remember-next { display: inline-block; margin-top: 18px; min-width: 175px; min-height: 52px; font-size: 17px; }
+    @media (max-width: 660px) {
+      .question-box.show-solution { padding: 19px 10px 22px; }
+      .remember-next { margin-top: 17px; }
+    }
+    @media (max-width: 660px) { .series-button { min-height: 62px; } }
+
+    /* V21: schlanke Reihenauswahl, Farbe des Rahmens zeigt ausschließlich den Lernstand. */
+    .series-heading { font-size: clamp(14px, 3.9vw, 24px); line-height: 1.2; letter-spacing: -.45px; white-space: nowrap; margin-bottom: 12px; }
+    .skill-legend { margin: 0 0 16px; gap: 7px 13px; }
+    .series-button.is-selected, .hard-four-start.is-selected { background: #ffe0bc; color: var(--ink); box-shadow: none; }
+    .series-button.is-selected .series-number::after { content: none; }
+    .series-button:not(.is-selected), .hard-four-start:not(.is-selected) { background: #fff; }
+    .hard-four-start { min-height: 53px; padding: 8px 12px; margin-top: 12px; display: flex; flex-wrap: nowrap; justify-content: center; gap: 13px;
+      border: 3px solid #dc6a68; border-radius: 15px; background: #fff; color: var(--ink); }
+    .hard-four-start .hard-four-label { font-size: 16px; }
+    .hard-four-progress { font-size: 13px; padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--ink); }
+    .hard-four-start.stage-lime, .hard-four-start.stage-green { border-width: 4px; }
+    .hard-four-start.stage-master { border-width: 5px; }
+    .hard-four-start:hover { filter: brightness(.98); }
+    .selection-footer { margin-top: 11px; justify-content: flex-start; }
+    .selection-info { margin: 8px 2px 0; color: #ae3229; font-size: 13px; }
+    .skill-note { margin: 14px 0 0; font-size: 13px; line-height: 1.4; }
+    @media (max-width: 380px) {
+      .series-heading { font-size: clamp(13px, 3.8vw, 16px); }
+      .skill-legend { gap: 6px 9px; font-size: 11px; }
+      .skill-legend span { white-space: nowrap; }
+    }
+    /* Reihenfolge nur im Lernmodus; kleine, klar getrennte Auswahl direkt unter Lernen. */
+    .learn-mode-group { min-width: 0; display: flex; flex-direction: column; gap: 9px; }
+    .learn-mode-group > .mode-card { flex: none; }
+    .learning-order { background: #f8fcf8; border: 1px solid #d9ebe5; border-radius: 17px; padding: 10px; }
+    .learning-order-title { color: #496663; font-size: 12px; font-weight: 850; margin: 0 0 8px; }
+    .learning-order-choices { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 7px; }
+    .learning-order-option { min-width: 0; display: flex; flex-direction: column; justify-content: center; align-items: center;
+      gap: 6px; padding: 9px 4px; border: 2px solid #d3e2da; border-radius: 12px; background: white; color: #173939; }
+    .learning-order-option.is-active { background: #ffead3; border-color: #cf995f; }
+    .learning-order-option:focus-visible { outline: 3px solid #0e7776; outline-offset: 2px; }
+    .learning-order-name { font-size: clamp(10px, 1.6vw, 12px); font-weight: 850; line-height: 1.25; text-align: center; }
+    .learning-order-example { font-size: clamp(12px, 1.7vw, 15px); font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .mixed-example { display: inline-flex; align-items: center; justify-content: center; gap: clamp(4px, 1vw, 10px); }
+    .learning-order-divider { display: inline-block; color: #9d6b40; font-weight: 950; font-size: 17px; padding: 0 2px; }
+    @media (max-width: 660px) {
+      .learning-order { padding: 10px 12px; }
+      .learning-order-name { font-size: clamp(11px, 3.5vw, 13px); }
+      .learning-order-example { font-size: clamp(13px, 3.7vw, 16px); }
+      .learning-order-option { padding: 10px 6px; }
+      .mixed-example { gap: 9px; }
+    }
+    @media (max-width: 340px) {
+      .learning-order { padding: 8px; }
+      .learning-order-choices { gap: 6px; }
+      .learning-order-name { font-size: 11px; }
+      .learning-order-example { font-size: 12px; }
+      .mixed-example { gap: 3px; }
+    }
+
+    /* V24: Fünf Kinder, kinderfreundliche Modiauswahl und Pokalsammlung. */
+    .profile-panel { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; margin: 0 0 15px; padding: 11px 13px;
+      border-radius: 16px; background: #eaf5f1; border: 1px solid #d1e5dd; }
+    .profile-panel label { font-size: 14px; font-weight: 850; color: #175c56; }
+    .profile-panel select { flex: 1; min-width: 120px; max-width: 300px; background: white; border: 1px solid #a6d1c4;
+      border-radius: 11px; padding: 9px; font: inherit; font-weight: 750; color: var(--ink); }
+    .profile-panel button { padding: 9px 11px; font-size: 13px; }
+    .profile-name-top { font-weight: 850; color: #0e7776; }
+    .profile-dialog { width: min(440px, calc(100% - 24px)); max-height: calc(100dvh - 28px); overflow-y: auto;
+      padding: 23px; border-radius: 22px; border: 1px solid #d8e6df; background: #fff; color: var(--ink); }
+    .profile-dialog::backdrop { background: #162f3299; }
+    .profile-dialog h2 { margin: 0 0 9px; }
+    .profile-dialog p { color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .profile-pick-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin: 16px 0; }
+    .profile-pick-grid button { min-height: 52px; background: #e7f5ef; border: 2px solid #b3d9cd; border-radius: 12px; padding: 8px; font-weight: 850; }
+    .profile-name-input { width: 100%; min-height: 49px; padding: 12px; margin: 8px 0 15px;
+      border-radius: 10px; border: 2px solid #b6d6cb; font: inherit; }
+    .profile-subnote { margin: 0 0 16px !important; font-size: 13px !important; }
+    .profile-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+    .privacy-note { color: #607577; font-size: 13px; font-weight: 750; text-align: center; margin: 17px 0 0; }
+    .trophy-color-bronze { color: #ad7138; }
+    .trophy-color-silver { color: #8499ae; }
+    .trophy-color-gold { color: #e0aa25; }
+    .trophy-color-platin { color: #508fc3; }
+    .award-mini svg { width: 46px; height: 46px; filter: drop-shadow(0 2px 2px #4b513344); }
+    .award-cup-icon { display:block; margin: auto; width: 108px; height: 108px; color: #e0aa25; filter: drop-shadow(0 4px 4px #80642550); }
+    .reset-option-group { padding: 10px 12px; margin: 14px 0; background: #f7faf8; border-radius: 13px; }
+    .reset-option-group > strong { display: block; font-size: 14px; margin-bottom: 4px; }
+    .reset-option-group label { display:flex; align-items: flex-start; gap:9px; margin:8px 0; font-size:14px; line-height:1.4; }
+    .reset-option-group input { width:19px; height:19px; flex:none; accent-color: #0e7776; }
+    .result-description { white-space: pre-line; }
+    @media (max-width: 360px) {
+      .profile-panel { gap: 7px; } .profile-panel label { width:100%; }
+      .profile-panel select { min-width: 0; } .profile-panel button { padding: 9px 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="hero">
+      <button class="home-link" type="button" id="homeButton" aria-label="Zur Startauswahl zurückkehren" title="Zur Startauswahl">
+        <span class="logo" aria-hidden="true"><span class="logo-main">1×1</span><span class="logo-sub">START</span></span>
+        <span class="hero-title"><h1>1×1 Training mit Caren</h1><p>📘 Lernen &nbsp;▪︎&nbsp; ✏️ Üben &nbsp;▪︎&nbsp; 🌟 Stolz sein! <span class="profile-name-top" id="headerChildName"></span></p></span>
+      </button>
+    </header>
+    <main>
+      <section class="screen" id="setupScreen" aria-label="Übung auswählen">
+        <div class="profile-panel"><label for="profileSelect">Wer übt?</label><select id="profileSelect" aria-label="Kind auswählen"></select><button type="button" class="subtle-button" id="renameProfile">Name ändern</button></div>
+        <div class="panel">
+          <h2 class="series-heading">Welche Reihen möchtest du üben?</h2>
+          <div class="skill-legend" aria-label="Bedeutung der Rahmenfarben">
+            <span><i class="legend-dot red" aria-hidden="true"></i>Noch üben</span>
+            <span><i class="legend-dot yellow" aria-hidden="true"></i>Auf gutem Weg</span>
+            <span><i class="legend-dot green" aria-hidden="true"></i>Sicher</span>
+          </div>
+          <div class="series-grid" id="seriesGrid" aria-label="Einmaleinsreihen 1 bis 10"></div>
+          <button class="hard-four-start" id="hardFourStart" type="button" aria-pressed="false" aria-label="Knifflige 5 auswählen">
+            <span class="hard-four-label">⭐ Knifflige 5</span>
+            <span class="hard-four-progress" id="hardFourPercent">0 %</span>
+          </button>
+          <div class="selection-footer">
+            <div class="selection-actions">
+              <button class="subtle-button" id="selectAll" type="button">Alle auswählen</button>
+              <button class="subtle-button" id="selectNone" type="button">Keine</button>
+            </div>
+          </div>
+          <p class="selection-info" id="selectedInfo" role="status" aria-live="polite" hidden></p>
+          <p class="skill-note">1er und 10er werden schneller grün als 7er und 8er. 😉</p>
+        </div>
+        <h2 class="section-label">Wie möchtest du üben?</h2>
+        <div class="mode-grid">
+          <div class="learn-mode-group">
+            <button class="mode-card learn start-mode" data-mode="learn" type="button">
+              <span class="mode-emoji" aria-hidden="true">📗</span>
+              <span class="mode-text"><span class="mode-name">Lernen</span><span class="mode-desc">Ohne Zeitdruck. So viele Aufgaben, wie du möchtest.</span></span>
+              <span class="arrow" aria-hidden="true">→</span>
+            </button>
+            <div class="learning-order" role="group" aria-labelledby="learningOrderLabel">
+              <div class="learning-order-title" id="learningOrderLabel">Reihenfolge der Zahlen</div>
+              <div class="learning-order-choices">
+                <button type="button" class="learning-order-option is-active" data-order="back" aria-pressed="true">
+                  <span class="learning-order-name">Reihenzahl hinten</span>
+                  <span class="learning-order-example">3 × 7</span>
+                </button>
+                <button type="button" class="learning-order-option" data-order="mixed" aria-pressed="false">
+                  <span class="learning-order-name">Gemischt</span>
+                  <span class="learning-order-example mixed-example"><span>3 × 7</span><span class="learning-order-divider" aria-hidden="true">|</span><span>7 × 3</span></span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <button class="mode-card practice start-mode" data-mode="practice" type="button">
+            <span class="mode-emoji" aria-hidden="true">✏️</span>
+            <span class="mode-text"><span class="mode-name">Kleine Übung</span><span class="mode-desc">10 Aufgaben – ohne Note</span></span>
+            <span class="arrow" aria-hidden="true">→</span>
+          </button>
+          <button class="mode-card test start-mode" data-mode="test" type="button">
+            <span class="mode-emoji" aria-hidden="true">🎓</span>
+            <span class="mode-text"><span class="mode-name">Test</span><span class="mode-desc">10 Aufgaben – mit Note</span></span>
+            <span class="arrow" aria-hidden="true">→</span>
+          </button>
+          <button class="mode-card speed start-mode" data-mode="speed" type="button">
+            <span class="mode-emoji" aria-hidden="true">⏱️</span>
+            <span class="mode-text"><span class="mode-name">Mein Rekord</span><span class="mode-desc">60 Sekunden – wie viele schaffst du?</span></span>
+            <span class="arrow" aria-hidden="true">→</span>
+          </button>
+        </div>
+        <div class="table-promo">
+          <div><h2>Einmaleins-Tabelle</h2><p>Alle Ergebnisse zum Nachschlagen und Merken.</p></div>
+          <button class="primary open-table" type="button">Ansehen</button>
+        </div>
+        <p class="privacy-note">Deine Ergebnisse werden auf <strong>diesem</strong> Handy gespeichert.</p>
+        <div class="award-progress" id="awardProgress" aria-live="polite"></div>
+        <section class="award-card" id="awardCard" hidden aria-label="Großer Pokal für das Einmaleins">
+          <div class="award-cup" aria-hidden="true">🏆</div>
+          <h2 id="awardTitle">Dein großer 1×1-Pokal!</h2>
+          <p>Alle elf Lernziele und alle drei Übungsarten geschafft!</p>
+          <p id="awardDays" class="award-dates"></p>
+          <div class="award-shelf" id="awardShelf" hidden aria-label="Deine gesammelten Pokale"></div>
+        </section>
+        <p class="footer-note">✓ Ohne Anmeldung &nbsp; ✓ Keine Werbung &nbsp; ✓ Offline verwendbar</p>
+        <div class="reset-footer">
+          <button class="reset-trigger" id="resetOpen" type="button"><span>Setze alle Ergebnisse wieder auf Null.</span><span class="reset-adult-note">Nur für Erwachsene!</span></button>
+          <p class="reset-status" id="resetStatus" role="status" hidden></p>
+        </div>
+      </section>
+      <section class="screen" id="practiceScreen" hidden aria-label="Einmaleins üben">
+        <div class="practice-top">
+          <button class="back-button" type="button" id="backFromPractice">← Zur Auswahl</button>
+          <span class="practice-series" id="practiceSeries"></span>
+        </div>
+        <div class="panel practice-panel">
+          <p class="practice-mode" id="practiceMode"></p>
+          <div class="practice-progress" id="practiceProgress"></div>
+          <div class="progress-track" id="progressTrack" role="progressbar" aria-label="Fortschritt" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden><div class="progress-fill" id="progressFill"></div></div>
+          <div class="question-box" id="questionBox">
+            <div class="remember-label" id="rememberLabel" hidden>Bitte merken!</div>
+            <div class="wrong-attempts" id="wrongAttempts" hidden></div>
+            <div class="question" id="question" aria-live="polite"></div>
+            <div class="remember-note" id="rememberNote" hidden>Das üben wir noch.</div>
+            <div id="answerArea">
+              <div class="answer-caption feedback" id="feedback" role="status" aria-live="polite"></div>
+              <div id="answerDisplay" class="answer-display empty" role="status" aria-label="Deine eingegebene Antwort">?</div>
+            </div>
+            <button class="primary remember-next" type="button" id="nextButton" hidden>OK</button>
+          </div>
+          <div class="learn-break" id="learnBreak" hidden aria-live="polite">
+            <div class="break-emoji" aria-hidden="true">🌟</div>
+            <h2 id="breakHeading">15 Aufgaben geschafft!</h2>
+            <p>Weiterlernen?</p>
+            <div class="learn-break-buttons">
+              <button class="primary" type="button" id="breakContinue">Ja, weiter!</button>
+              <button class="outline" type="button" id="breakFinish">Zur Startauswahl</button>
+            </div>
+          </div>
+          <div class="keypad" id="keypad" aria-label="Zahlentastatur">
+            <button class="number-key" type="button" data-digit="1">1</button>
+            <button class="number-key" type="button" data-digit="2">2</button>
+            <button class="number-key" type="button" data-digit="3">3</button>
+            <button class="number-key" type="button" data-digit="4">4</button>
+            <button class="number-key" type="button" data-digit="5">5</button>
+            <button class="number-key" type="button" data-digit="6">6</button>
+            <button class="number-key" type="button" data-digit="7">7</button>
+            <button class="number-key" type="button" data-digit="8">8</button>
+            <button class="number-key" type="button" data-digit="9">9</button>
+            <button class="number-key erase" type="button" id="erase" aria-label="Letzte Ziffer löschen">⌫</button>
+            <button class="number-key" type="button" data-digit="0">0</button>
+            <button class="number-key enter" type="button" id="checkAnswer" disabled>OK ✓</button>
+          </div>
+
+        </div>
+      </section>
+      <section class="screen" id="resultScreen" hidden aria-label="Ergebnis">
+        <div class="panel result-panel">
+          <div class="trophy" id="resultEmoji" aria-hidden="true">🏆</div>
+          <h2 id="resultHeading"></h2>
+          <div class="result-score" id="resultScore"></div>
+          <div class="result-grade" id="resultGrade" hidden></div>
+          <p class="result-description" id="resultDescription"></p>
+          <p class="result-next-idea" id="resultNextIdea" hidden></p>
+          <p class="grade-scale" id="gradeScale" hidden>Notenschlüssel: 10 richtig = 1 · 9 = 2 · 7–8 = 3 · 5–6 = 4 · 3–4 = 5 · 0–2 = 6</p>
+          <div class="result-buttons">
+            <button class="primary" type="button" id="retryButton">Nochmal üben</button>
+            <button class="outline" type="button" id="backFromResult">Zur Startauswahl</button>
+          </div>
+          <div class="mistakes" id="mistakesBox" hidden>
+            <h3>Diese Aufgaben kannst du noch üben:</h3>
+            <ul id="mistakeList"></ul>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <dialog id="profilePickDialog" class="profile-dialog" aria-labelledby="profilePickTitle">
+    <h2 id="profilePickTitle">Wer möchte üben?</h2>
+    <p>Wähle dein eigenes Kinderprofil. Jeder Lernstand bleibt getrennt.</p>
+    <div class="profile-pick-grid" id="profilePickButtons"></div>
+    <p class="profile-subnote">Deine Ergebnisse werden auf <strong>diesem</strong> Handy gespeichert.</p>
+  </dialog>
+  <dialog id="renameDialog" class="profile-dialog" aria-labelledby="renameTitle">
+    <h2 id="renameTitle">Name ändern</h2>
+    <label for="profileNameInput">Wie heißt das Kind?</label>
+    <input class="profile-name-input" id="profileNameInput" maxlength="24" autocomplete="off" placeholder="Name">
+    <div class="profile-actions"><button class="outline" type="button" id="renameCancel">Abbrechen</button><button class="primary" type="button" id="renameSave">Speichern</button></div>
+  </dialog>
+  <dialog id="resetDialog" class="reset-dialog" aria-labelledby="resetHeading">
+    <h2 id="resetHeading">Nur für Erwachsene</h2>
+    <p>Welche Ergebnisse sollen auf <strong>0</strong> gesetzt werden?</p>
+    <p class="reset-scope-desc" id="resetProfileInfo"></p>
+    <fieldset class="reset-scope" id="resetScope">
+      <legend>Welche Bereiche?</legend>
+      <label class="reset-option"><input type="checkbox" id="resetAll"><span><strong>Alle vier Modi</strong></span></label>
+      <label class="reset-option"><input type="checkbox" class="reset-mode" value="learn" id="resetLearn"><span>Lernen · Reihenprozente</span></label>
+      <label class="reset-option"><input type="checkbox" class="reset-mode" value="practice" id="resetPractice"><span>Kleine Übung</span></label>
+      <label class="reset-option"><input type="checkbox" class="reset-mode" value="test" id="resetTest"><span>Test</span></label>
+      <label class="reset-option"><input type="checkbox" class="reset-mode" value="speed" id="resetSpeed"><span>Mein Rekord</span></label>
+    </fieldset>
+    <div class="reset-option-group">
+      <strong>Was soll mit den Pokalen geschehen?</strong>
+      <label><input type="radio" name="resetCups" id="keepCups" checked><span>Pokale behalten – dasselbe Kind übt weiter.</span></label>
+      <label><input type="radio" name="resetCups" id="deleteCups"><span>Pokale löschen – nur für einen vollständigen Neustart.</span></label>
+    </div>
+    <label class="reset-option-group reset-option"><input type="checkbox" id="resetNewChild"><span><strong>Dieser Platz ist für ein anderes Kind.</strong><span class="reset-details">Alle Ergebnisse und Pokale dieses Platzes löschen, Name wird wieder „Kind …“. Andere Kinder bleiben unberührt.</span></span></label>
+    <p class="reset-warning" id="resetWarning">Achtung: Ausgewählte Ergebnisse werden dauerhaft gelöscht.</p>
+    <label class="reset-confirm-check"><input type="checkbox" id="resetAdultCheck"><span>Ein Erwachsener bestätigt ausdrücklich diese Rücksetzung.</span></label>
+    <label class="reset-label" for="resetWord">Zur Bestätigung LÖSCHEN eintippen:</label>
+    <input class="reset-word" id="resetWord" type="text" spellcheck="false" autocomplete="off" autocapitalize="characters" placeholder="LÖSCHEN" maxlength="16">
+    <div class="reset-actions">
+      <button type="button" class="outline" id="resetCancel">Abbrechen</button>
+      <button type="button" class="reset-danger" id="resetConfirm" disabled>Auswahl löschen</button>
+    </div>
+  </dialog>
+  <dialog id="awardDialog" class="award-dialog" aria-labelledby="awardDialogTitle">
+    <div class="award-cup" aria-hidden="true">🏆</div>
+    <h2 id="awardDialogTitle">Pokal geschafft!</h2>
+    <p><strong>11 Lernziele auf 100 %!</strong></p>
+    <p>Du hast fleißig gelernt, geübt, getestet und Rekorde gesammelt. Weiter geht’s zum nächsten Pokal!</p>
+    <p id="awardDialogDays" style="font-weight:850"></p>
+    <button type="button" class="primary" id="awardClose">Zur Startauswahl</button>
+  </dialog>
+  <dialog id="tableDialog" aria-label="Einmaleins-Tabelle">
+    <div class="dialog-head"><h2>Die 1×1-Tabelle</h2><button class="close-button" type="button" id="closeTable" aria-label="Tabelle schließen">×</button></div>
+    <div class="dialog-body">
+      <p class="table-tip">Tippe auf ein Ergebnis. Auf kleinen Bildschirmen kannst du die Tabelle seitlich verschieben.</p>
+      <div class="table-highlight" id="tableHighlight" aria-live="polite">Wähle eine Aufgabe in der Tabelle.</div>
+      <div class="table-scroll"><table class="times-table" id="timesTable" aria-label="Einmaleins von 1 bis 10"></table></div>
+    </div>
+  </dialog>
+  <script>
+    'use strict';
+    (() => {
+      const byId = id => document.getElementById(id);
+      const allRows = Array.from({ length: 10 }, (_, i) => i + 1);
+      // Alle lokalen Daten werden pro Kind gespeichert. Beim allerersten Aufruf
+      // übernehmen wir den bisherigen Lernstand unverändert in „Kind 1“.
+      const PROFILE_META_KEY = 'einmaleins-caren-kinder-v24';
+      const PROFILE_PREFIX = 'einmaleins-caren-kind-v24-';
+      const LEGACY_KEYS = [
+        'mein-kleines-einmaleins-reihen-v1','mein-kleines-einmaleins-rekorde-v1',
+        'mein-kleines-einmaleins-lernstand-v2','einmaleins-caren-knifflige-auswahl-v21',
+        'einmaleins-caren-lernanordnung-v23','einmaleins-caren-test-v14',
+        'einmaleins-caren-speed-v14','einmaleins-caren-pokal-v14'
+      ];
+      let profileMeta;
+      try { profileMeta = JSON.parse(localStorage.getItem(PROFILE_META_KEY)); } catch { profileMeta = null; }
+      const firstOpen = !profileMeta || !Array.isArray(profileMeta.names) || profileMeta.names.length !== 5;
+      if (firstOpen) {
+        profileMeta = { active: 1, names: ['Kind 1','Kind 2','Kind 3','Kind 4','Kind 5'], hasChosen: false };
+        try {
+          for (const key of LEGACY_KEYS) {
+            const previous = localStorage.getItem(key);
+            if (previous !== null) localStorage.setItem(`${PROFILE_PREFIX}1-${key}`, previous);
+          }
+          localStorage.setItem(PROFILE_META_KEY, JSON.stringify(profileMeta));
+        } catch { /* Private Browsing oder Dateibrowser kann lokalen Speicher blockieren. */ }
+      }
+      let activeProfileId = Number(profileMeta.active) >= 1 && Number(profileMeta.active) <= 5 ? Number(profileMeta.active) : 1;
+      const profileName = () => profileMeta.names[activeProfileId - 1] || `Kind ${activeProfileId}`;
+      function saveProfiles() {
+        try { localStorage.setItem(PROFILE_META_KEY, JSON.stringify(profileMeta)); } catch { /* Speicherung ggf. nicht möglich */ }
+      }
+      function scopedKey(key) { return `${PROFILE_PREFIX}${activeProfileId}-${key}`; }
+      const STORAGE_SELECTION = 'mein-kleines-einmaleins-reihen-v1';
+      const STORAGE_RECORD = 'mein-kleines-einmaleins-rekorde-v1';
+      const STORAGE_PROGRESS = 'mein-kleines-einmaleins-lernstand-v2';
+      const STORAGE_HARD_SELECTION = 'einmaleins-caren-knifflige-auswahl-v21';
+      const STORAGE_LEARN_ORDER = 'einmaleins-caren-lernanordnung-v23';
+      const STORAGE_PRACTICE_STATS = 'einmaleins-caren-kleine-uebung-v24';
+      const STORAGE_TEST_STATS = 'einmaleins-caren-test-v14';
+      const STORAGE_SPEED_STATS = 'einmaleins-caren-speed-v14';
+      const STORAGE_AWARD = 'einmaleins-caren-pokal-v14';
+      const AWARD_PRACTICE_ROUNDS = 10;
+      const AWARD_TEST_ROUNDS = 10;
+      const AWARD_SPEED_ROUNDS = 10;
+      // Nach dem ersten Pokal bringen je zehn weitere vollständige Test- und
+      // Zeitrunden einen weiteren Pokal, solange alle Reihen sicher sind.
+      // Pokale bleiben erhalten, auch wenn ein Lernfehler später die Prozente senkt.
+      // Lernreihen haben unterschiedliche Ziele: Anzahl fehlerfreier
+      // Erstversuche in Folge JE Aufgabe. Bisherige Zähler bleiben gespeichert.
+      const ROW_TARGETS = Object.freeze({
+        1: 3, 2: 7, 3: 10, 4: 15, 5: 15,
+        6: 15, 7: 20, 8: 20, 9: 15, 10: 7,
+      });
+      const MASTERY_TARGET = 20; // Speicherkapazität des bisherigen streak-Feldes.
+      const HARD_FOUR_TARGET = 20;
+      // Die fünfte knifflige Aufgabe ist eine einzige Fertigkeit mit zwei
+      // möglichen Darstellungen (3 × 17 und 17 × 3).
+      const HARD_FOUR_IDS = ['7-7', '7-8', '8-7', '8-8', '3-17'];
+      const modes = { learn: 'Lernen', practice: 'Kleine Übung', test: 'Test', speed: 'Mein Rekord' };
+      const PRAISE = ['Fleißig geübt!','Weiter so!','Gut gemacht!','Prima!','Stark!','Toll geübt!','Bleib dran!','Super Einsatz!','Klasse!','Gut gerechnet!','Schön geübt!','Das wird!','Du schaffst das!','Großartig!','Fein gemacht!','Toll drangeblieben!','Viel geschafft!','Gut ausprobiert!','Mach weiter so!','Schön fleißig!','Das war gut!','Ein Schritt weiter!','Prima gelernt!','Wieder was gelernt!','Du wirst sicherer!','Weiter üben lohnt sich!'];
+      const state = {
+        selected: new Set(allRows), hardFourSelected: false, learnOrder: 'back', progress: {}, mode: null, bag: [],
+        reviewQueue: [], current: null, lastId: null, lastSeen: new Map(), questionCounts: new Map(), testUsedPairs: new Set(), speedUsedPairs: new Set(), shownDirections: { front: 0, back: 0 }, sessionErrors: new Map(), questionIndex: 0,
+        answer: '', completed: 0, correct: 0, mistakes: [], locked: false, lastLearnBreak: 0,
+        attempts: 0, awaitingRetryInput: false, answerColor: '', wrongAnswers: [],
+        sessionId: 0, timerId: null, secondsLeft: 60, finishAt: 0,
+        practiceStats: { rounds: 0, totalCorrect: 0 },
+        testStats: { rounds: 0, totalCorrect: 0, bestCorrect: 0 },
+        speedStats: { rounds: 0, totalCorrect: 0 },
+        award: { firstDates: {}, earnedDate: null, trophies: [], trainingDates: { learn: [], practice: [], test: [], speed: [] }, historicalPartial: false }, awardPending: false,
+      };
+      const readJSON = key => {
+        try { return JSON.parse(localStorage.getItem(scopedKey(key))); } catch { return null; }
+      };
+      const writeJSON = (key, value) => {
+        try { localStorage.setItem(scopedKey(key), JSON.stringify(value)); } catch { /* Offline-Dateizugriff kann Speicher einschränken. */ }
+      };
+      const saved = readJSON(STORAGE_SELECTION);
+      if (Array.isArray(saved) && saved.every(n => Number.isInteger(n) && n >= 1 && n <= 10)) {
+        state.selected = new Set(saved);
+      }
+      state.hardFourSelected = readJSON(STORAGE_HARD_SELECTION) === true;
+      state.learnOrder = readJSON(STORAGE_LEARN_ORDER) === 'mixed' ? 'mixed' : 'back';
+      const savedProgress = readJSON(STORAGE_PROGRESS);
+      if (savedProgress && typeof savedProgress === 'object' && !Array.isArray(savedProgress)) {
+        state.progress = savedProgress;
+      }
+      // Ab V14 werden abgeschlossene Test- und Zeitrunden getrennt geführt.
+      // Alte Lernstände bleiben vollständig erhalten. Früher absolvierte Runden
+      // können ohne alte Zähler nicht nachträglich zuverlässig rekonstruiert werden.
+      const loadedPractice = readJSON(STORAGE_PRACTICE_STATS);
+      if (loadedPractice && typeof loadedPractice === 'object') {
+        state.practiceStats.rounds = Math.max(0, Number(loadedPractice.rounds) || 0);
+        state.practiceStats.totalCorrect = Math.max(0, Number(loadedPractice.totalCorrect) || 0);
+      }
+      const loadedTest = readJSON(STORAGE_TEST_STATS);
+      if (loadedTest && typeof loadedTest === 'object' && !Array.isArray(loadedTest)) {
+        for (const key of ['rounds', 'totalCorrect', 'bestCorrect']) {
+          if (Number.isFinite(loadedTest[key])) state.testStats[key] = Math.max(0, Math.floor(loadedTest[key]));
+        }
+      }
+      const loadedSpeed = readJSON(STORAGE_SPEED_STATS);
+      if (loadedSpeed && typeof loadedSpeed === 'object' && !Array.isArray(loadedSpeed)) {
+        for (const key of ['rounds', 'totalCorrect']) {
+          if (Number.isFinite(loadedSpeed[key])) state.speedStats[key] = Math.max(0, Math.floor(loadedSpeed[key]));
+        }
+      }
+      const loadedAward = readJSON(STORAGE_AWARD);
+      if (loadedAward && typeof loadedAward === 'object' && !Array.isArray(loadedAward)) {
+        const firstDates = loadedAward.firstDates && typeof loadedAward.firstDates === 'object' ? loadedAward.firstDates : {};
+        const trainingDates = { learn: [], practice: [], test: [], speed: [] };
+        const hadTrainingDates = loadedAward.trainingDates && typeof loadedAward.trainingDates === 'object';
+        if (hadTrainingDates) {
+          for (const mode of Object.keys(trainingDates)) {
+            if (Array.isArray(loadedAward.trainingDates[mode])) {
+              trainingDates[mode] = [...new Set(loadedAward.trainingDates[mode].filter(validDate))].sort();
+            }
+          }
+        }
+        // Alte V14-Pokale und Startdaten übernehmen. Die tatsächlichen
+        // Trainingstage wurden vor dieser Version noch nicht mitgezählt.
+        const historicalPartial = !!loadedAward.historicalPartial ||
+          (!hadTrainingDates && Object.keys(firstDates).length > 0);
+        let trophies = Array.isArray(loadedAward.trophies) ? loadedAward.trophies.filter(t => t && validDate(t.earnedDate)) : [];
+        if (!trophies.length && validDate(loadedAward.earnedDate)) {
+          const dates = Object.values(firstDates).filter(validDate).sort();
+          trophies = [{ startDate: dates[0] || loadedAward.earnedDate,
+            earnedDate: loadedAward.earnedDate, trainingDays: null }];
+        }
+        state.award = { firstDates, earnedDate: trophies.length ? trophies[trophies.length-1].earnedDate : null,
+          trophies, trainingDates, historicalPartial };
+      }
+      // Frühere V23-Runden wurden kumulativ gezählt. Ab V24 zählt die aktuelle Runde.
+      // Migration nur einmal pro Kind, damit ältere Pokale keine neuen Ziele überspringen.
+      if (!readJSON('einmaleins-caren-zaehlermigration-v24')) {
+        const already = state.award.trophies.length;
+        if (already) {
+          state.testStats.rounds = Math.max(0, state.testStats.rounds - already * AWARD_TEST_ROUNDS);
+          state.speedStats.rounds = Math.max(0, state.speedStats.rounds - already * AWARD_SPEED_ROUNDS);
+          writeJSON(STORAGE_TEST_STATS, state.testStats);
+          writeJSON(STORAGE_SPEED_STATS, state.speedStats);
+        }
+        writeJSON('einmaleins-caren-zaehlermigration-v24', true);
+      }
+      function validDate(value) {
+        return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
+      }
+      function todayLocal() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      }
+      function dateLabel(iso) {
+        if (!validDate(iso)) return 'unbekannt';
+        const [y,m,d] = iso.split('-');
+        return `${d}.${m}.${y}`;
+      }
+      function daysInclusive(start, end) {
+        const toUTC = value => {
+          if (!validDate(value)) return NaN;
+          const [year, month, day] = value.split('-').map(Number);
+          return Date.UTC(year, month - 1, day);
+        };
+        const count = Math.floor((toUTC(end) - toUTC(start))/86400000)+1;
+        return Number.isFinite(count) ? Math.max(1,count) : 1;
+      }
+      function awardStartDate() {
+        const dates = Object.values(state.award.firstDates).filter(validDate).sort();
+        return dates[0] || todayLocal();
+      }
+      function loggedTrainingDays(start, end) {
+        const days = new Set();
+        for (const dates of Object.values(state.award.trainingDates)) {
+          for (const day of dates) if (day >= start && day <= end) days.add(day);
+        }
+        return days.size;
+      }
+      function trophyDayText(trophy) {
+        const start = trophy.startDate, end = trophy.earnedDate;
+        const span = daysInclusive(start, end);
+        const spanText = `Zeitraum: ${span} ${span === 1 ? 'Kalendertag' : 'Kalendertage'}`;
+        const activityText = trophy.trainingDays === null || trophy.trainingDays === undefined ?
+          'Übungstage vor Version 15 nicht vollständig erfasst' :
+          `Geübt an ${trophy.trainingDays} ${trophy.trainingDays === 1 ? 'Tag' : 'Tagen'}`;
+        return `Beginn: ${dateLabel(start)} · Geschafft: ${dateLabel(end)}\n${spanText} · ${activityText}`;
+      }
+      function markFirstTraining(mode) {
+        const today = todayLocal();
+        if (!state.award.firstDates[mode]) state.award.firstDates[mode] = today;
+        if (!state.award.trainingDates[mode].includes(today)) state.award.trainingDates[mode].push(today);
+        writeJSON(STORAGE_AWARD, state.award);
+      }
+      function rowTarget(n) { return ROW_TARGETS[n] || MASTERY_TARGET; }
+      function safeStreak(id) { return Math.max(0, Number(state.progress[id]?.streak) || 0); }
+      function rowPercent(n) {
+        const target = rowTarget(n);
+        const total = allRows.reduce((sum, k) => sum + Math.min(target, safeStreak(`${n}-${k}`)), 0);
+        return Math.round(100 * total / (10 * target));
+      }
+      function hardFourPercent() {
+        const total = HARD_FOUR_IDS.reduce((sum, id) => sum + Math.min(HARD_FOUR_TARGET, safeStreak(id)), 0);
+        return Math.round(100 * total / (HARD_FOUR_IDS.length * HARD_FOUR_TARGET));
+      }
+      function masteredRows() {
+        return allRows.filter(n => allRows.every(k =>
+          safeStreak(`${n}-${k}`) >= rowTarget(n))).length;
+      }
+      function masteredGoals() {
+        return masteredRows() + (hardFourPercent() === 100 ? 1 : 0);
+      }
+      function updateAwardDisplay() {
+        const trophies = state.award.trophies;
+        const n = trophies.length;
+        const goals = masteredGoals();
+        const box = byId('awardProgress');
+        box.hidden = false;
+        box.replaceChildren();
+        const heading = document.createElement('div');
+        heading.className = 'award-progress-heading';
+        heading.textContent = n ? `Dein Weg zum ${n+1}. Pokal 🏆` : 'Dein Weg zum Pokal 🏆';
+        const details = document.createElement('div');
+        details.className = 'award-progress-details';
+        for (const [count, label] of [
+          [`${goals}/11`, 'Reihen auf 100 %'],
+          [`${Math.min(10,state.practiceStats.rounds)}/10`, 'Kleine Übungen'],
+          [`${Math.min(10,state.testStats.rounds)}/10`, 'Tests'],
+          [`${Math.min(10,state.speedStats.rounds)}/10`, 'Mein Rekord'],
+        ]) {
+          const number = document.createElement('span');
+          number.className = 'award-count'; number.textContent = count;
+          const target = document.createElement('span');
+          target.className = 'award-target'; target.textContent = label;
+          details.append(number,target);
+        }
+        box.append(heading, details);
+        byId('awardCard').hidden = n === 0;
+        if (!n) return;
+        const latest = trophies[n-1];
+        byId('awardTitle').textContent = n === 1 ? 'Dein großer 1×1-Pokal!' : `Deine ${n} großen 1×1-Pokale!`;
+        byId('awardDays').textContent = trophyDayText(latest);
+        const shelf = byId('awardShelf');
+        shelf.replaceChildren(); shelf.hidden = false;
+        trophies.forEach((trophy, i) => {
+          const cup = document.createElement('div'); cup.className = 'award-mini';
+          const icon = document.createElement('span');
+          icon.className = `emoji trophy-color-${['bronze','silver','gold','platin'][i % 4]}`;
+          icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M7 2h10v3h4v3a6 6 0 0 1-5.6 6 6.9 6.9 0 0 1-2.4 2v3h4v3H7v-3h4v-3a6.9 6.9 0 0 1-2.4-2A6 6 0 0 1 3 8V5h4V2Zm0 5H5v1a4 4 0 0 0 2.3 3.6L7 7Zm10 0v4.6A4 4 0 0 0 19 8V7h-2Z"/></svg>';
+          const title = document.createElement('strong'); title.textContent = `Pokal ${i+1}`;
+          const date = document.createElement('small'); date.textContent = dateLabel(trophy.earnedDate);
+          cup.append(icon,title,date);
+          cup.title = trophyDayText(trophy).replace('\n',' · ');
+          shelf.appendChild(cup);
+        });
+      }
+      function checkForAward() {
+        updateAwardDisplay();
+        if (masteredGoals() !== 11 || state.practiceStats.rounds < AWARD_PRACTICE_ROUNDS ||
+            state.testStats.rounds < AWARD_TEST_ROUNDS || state.speedStats.rounds < AWARD_SPEED_ROUNDS) return false;
+        const start = awardStartDate(); const end = todayLocal();
+        state.award.trophies.push({ startDate: start, earnedDate: end,
+          trainingDays: state.award.historicalPartial ? null : loggedTrainingDays(start,end) });
+        state.award.earnedDate = end;
+        // Neue volle Lernrunde: Prozentwerte und alle Zähler wieder auf null,
+        // gewonnene Pokale bleiben im Pokalschrank.
+        state.progress = {};
+        state.practiceStats = { rounds: 0, totalCorrect: 0 };
+        state.testStats = { rounds: 0, totalCorrect: 0, bestCorrect: 0 };
+        state.speedStats = { rounds: 0, totalCorrect: 0 };
+        state.award.firstDates = {};
+        state.award.trainingDates = { learn: [], practice: [], test: [], speed: [] };
+        state.award.historicalPartial = false;
+        state.awardPending = true;
+        writeJSON(STORAGE_AWARD, state.award);
+        writeJSON(STORAGE_PROGRESS, state.progress);
+        writeJSON(STORAGE_PRACTICE_STATS, state.practiceStats);
+        writeJSON(STORAGE_TEST_STATS, state.testStats);
+        writeJSON(STORAGE_SPEED_STATS, state.speedStats);
+        updateSkillBorders(); updateAwardDisplay();
+        return true;
+      }
+      function showAwardIfPending() {
+        if (!state.awardPending) return false;
+        state.awardPending = false;
+        const latest = state.award.trophies.at(-1);
+        byId('awardDialogTitle').textContent = `Pokal ${state.award.trophies.length} geschafft!`;
+        byId('awardDialogDays').textContent = trophyDayText(latest);
+        byId('awardDialog').showModal();
+        return true;
+      }
+      function recordFor(id) {
+        if (!Object.hasOwn(state.progress, id) || !state.progress[id] || typeof state.progress[id] !== 'object') {
+          state.progress[id] = { seen: 0, first: 0, second: 0, missed: 0, firstWrong: 0, streak: 0 };
+        }
+        return state.progress[id];
+      }
+      function saveProgress() {
+        writeJSON(STORAGE_PROGRESS, state.progress);
+        updateSkillBorders();
+      }
+      // Die Soll-Zahl für 100 % hängt von der Reihe ab (3 bis 20).
+      // Ein Fehler setzt die fehlerfreie Folge dieser Aufgabe zurück.
+      function noteFirstMistake(q) {
+        if (state.mode !== 'learn') return; // Die Reihenprozente gehören zum Modus Lernen.
+        const r = recordFor(q.id);
+        r.firstWrong = (Number(r.firstWrong) || 0) + 1;
+        r.streak = 0;
+        saveProgress();
+      }
+      function noteCompleted(q, outcome) {
+        if (state.mode !== 'learn') return;
+        const r = recordFor(q.id);
+        r.seen = (Number(r.seen) || 0) + 1;
+        if (outcome === 'first') {
+          r.first = (Number(r.first) || 0) + 1;
+          r.streak = Math.min(MASTERY_TARGET, (Number(r.streak) || 0) + 1);
+        } else if (outcome === 'second') {
+          r.second = (Number(r.second) || 0) + 1;
+          r.streak = 0;
+        } else {
+          r.missed = (Number(r.missed) || 0) + 1;
+          r.streak = 0;
+        }
+        saveProgress();
+      }
+      const seriesGrid = byId('seriesGrid');
+      for (const n of allRows) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'series-button';
+        button.dataset.row = String(n);
+        const number = document.createElement('span');
+        number.className = 'series-number';
+        number.textContent = String(n);
+        const percent = document.createElement('span');
+        percent.className = 'series-percent';
+        button.append(number, percent);
+        button.addEventListener('click', () => {
+          if (state.selected.has(n)) state.selected.delete(n);
+          else state.selected.add(n);
+          updateSelection();
+        });
+        seriesGrid.appendChild(button);
+      }
+      function progressStage(pct) {
+        if (pct === 100) return 'master';
+        if (pct >= 85) return 'green';
+        if (pct >= 60) return 'lime';
+        if (pct >= 35) return 'yellow';
+        if (pct >= 15) return 'orange';
+        return 'red';
+      }
+      function applyProgressStage(button, pct) {
+        for (const stage of ['red', 'orange', 'yellow', 'lime', 'green', 'master']) {
+          button.classList.toggle(`stage-${stage}`, stage === progressStage(pct));
+        }
+      }
+      function updateSkillBorders() {
+        for (const button of seriesGrid.children) {
+          const n = Number(button.dataset.row);
+          const pct = rowPercent(n);
+          applyProgressStage(button, pct);
+          button.querySelector('.series-percent').textContent = `${pct} %`;
+          button.setAttribute('aria-label', `${n}er-Reihe, Lernstand ${pct} Prozent`);
+          button.title = `${n}er-Reihe: ${pct} % sicher, je Aufgabe ${rowTarget(n)} fehlerfreie Wiederholungen`;
+        }
+        const hardPct = hardFourPercent();
+        const hardButton = byId('hardFourStart');
+        applyProgressStage(hardButton, hardPct);
+        byId('hardFourPercent').textContent = `${hardPct} %`;
+        hardButton.title = `Knifflige 5: ${hardPct} % sicher`;
+      }
+      function unorderedKey(q) { return `${Math.min(q.a, q.b)}-${Math.max(q.a, q.b)}`; }
+      function availableQuestionCount(uniqueTauschaufgaben = false) {
+        const ids = new Set();
+        for (const a of state.selected) for (const b of allRows) {
+          ids.add(uniqueTauschaufgaben ? unorderedKey({ a, b }) : `${a}-${b}`);
+        }
+        if (state.hardFourSelected) for (const id of HARD_FOUR_IDS) {
+          ids.add(uniqueTauschaufgaben ? unorderedKey(pairFromId(id)) : id);
+        }
+        return ids.size;
+      }
+      function updateSelection() {
+        for (const button of seriesGrid.children) {
+          const isSelected = state.selected.has(Number(button.dataset.row));
+          button.classList.toggle('is-selected', isSelected);
+          button.setAttribute('aria-pressed', String(isSelected));
+        }
+        const hardButton = byId('hardFourStart');
+        hardButton.classList.toggle('is-selected', state.hardFourSelected);
+        hardButton.setAttribute('aria-pressed', String(state.hardFourSelected));
+        const count = state.selected.size + (state.hardFourSelected ? 1 : 0);
+        const info = byId('selectedInfo');
+        info.hidden = count > 0 && availableQuestionCount(true) >= 10;
+        info.textContent = count === 0 ? 'Wähle mindestens eine Reihe aus.' :
+          availableQuestionCount(true) < 10 ? 'Für Kleine Übung oder Test wähle noch eine Reihe dazu.' : '';
+        document.querySelectorAll('.start-mode').forEach(b => {
+          b.disabled = count === 0 || (['test','practice'].includes(b.dataset.mode) && availableQuestionCount(true) < 10);
+        });
+        writeJSON(STORAGE_SELECTION, [...state.selected].sort((a, b) => a - b));
+        writeJSON(STORAGE_HARD_SELECTION, state.hardFourSelected);
+        updateSkillBorders();
+      }
+      byId('selectAll').addEventListener('click', () => {
+        state.selected = new Set(allRows);
+        state.hardFourSelected = true;
+        updateSelection();
+      });
+      byId('selectNone').addEventListener('click', () => {
+        state.selected.clear();
+        state.hardFourSelected = false;
+        updateSelection();
+      });
+      byId('hardFourStart').addEventListener('click', () => {
+        state.hardFourSelected = !state.hardFourSelected;
+        updateSelection();
+      });
+      function showScreen(screen) {
+        for (const name of ['setup', 'practice', 'result']) byId(`${name}Screen`).hidden = name !== screen;
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }
+      function shuffle(items) {
+        const arr = [...items];
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      }
+      function pairFromId(id) {
+        const [a, b] = id.split('-').map(Number);
+        return { a, b, product: a * b, id };
+      }
+      // Schwierigkeit gilt für die beiden Faktoren in jeder Reihenfolge.
+      // Die Schwierigkeit einer Rechnung gilt unabhängig von der Faktorfolge.
+      // Zusätzlich zählt die Schwierigkeit der ausgewählten Ursprungsreihe.
+      // Gilt für Lernen, 10 Fragen (ohne Wiederholungen) und 60 Sekunden.
+      function difficultyWeight(q) {
+        const { a, b } = q;
+        if (a === 17 || b === 17) return 7; // 3 × 17 ist eine zusätzliche knifflige Aufgabe.
+        if ([1, 10].includes(a) || [1, 10].includes(b)) return 1;
+        if ([2, 5].includes(a) || [2, 5].includes(b)) return 2;
+        if ((a === 7 || a === 8) && (b === 7 || b === 8)) return 7;
+        if (a === 9 || b === 9) return 3;
+        if ([7, 8].includes(a) || [7, 8].includes(b)) return 4;
+        return 3;
+      }
+      // Persönliche Schwächen aus dem Lernen und aktuelle Fehler geben einen
+      // zusätzlichen, begrenzten Zuschlag. Viel gezeigte Aufgaben werden leicht
+      // abgebremst, damit die Abwechslung trotz Schwierigkeit erhalten bleibt.
+      function practiceWeight(q) {
+        const row = q.a;
+        const progress = state.progress[q.id];
+        const weakness = progress && (Number(progress.streak) || 0) < rowTarget(row)
+          ? Math.min(1.3, (Number(progress.missed) || 0) * 0.22 + (Number(progress.firstWrong) || 0) * 0.12)
+          : 0;
+        const justWrong = Math.min(1, (state.sessionErrors.get(q.id) || 0) * 0.4);
+        const alreadyAsked = state.questionCounts.get(q.id) || 0;
+        return difficultyWeight(q) * (1 + weakness + justWrong) /
+          (1 + Math.max(0, alreadyAsked - 1) * 0.32);
+      }
+      function isEnabledQuestion(id) {
+        return state.selected.has(Number(id.split('-')[0])) ||
+          (state.hardFourSelected && HARD_FOUR_IDS.includes(id));
+      }
+      function newBag() {
+        const unique = new Map();
+        for (const a of [...state.selected].sort((x, y) => x - y)) {
+          for (const b of allRows) {
+            const id = `${a}-${b}`;
+            unique.set(id, { a, b, product: a * b, id });
+          }
+        }
+        if (state.hardFourSelected) {
+          for (const id of HARD_FOUR_IDS) unique.set(id, pairFromId(id));
+        }
+        state.bag = [...unique.values()];
+      }
+      function scheduleReview(q, afterQuestions) {
+        if (state.mode !== 'learn' || !isEnabledQuestion(q.id)) return;
+        const due = state.questionIndex + afterQuestions;
+        const existing = state.reviewQueue.find(item => item.id === q.id);
+        if (existing) existing.due = Math.min(existing.due, due);
+        else state.reviewQueue.push({ id: q.id, due });
+      }
+      function seedReviews() {
+        const weak = [];
+        // Gleiches Übungspool-Verständnis wie bei der eigentlichen Auswahl.
+        if (!state.bag.length) newBag();
+        for (const q of state.bag) {
+          const rec = state.progress[q.id];
+          if (rec && Number(rec.firstWrong) > 0 && (Number(rec.streak) || 0) < rowTarget(q.a)) {
+            weak.push({ id: q.id, weight: 2 * (Number(rec.missed) || 0) + (Number(rec.firstWrong) || 0) });
+          }
+        }
+        weak.sort((a, b) => b.weight - a.weight);
+        state.reviewQueue = weak.slice(0, 20).map((rec, i) => ({ id: rec.id, due: 3 + i * 2 }));
+      }
+      function weightedRandomPair() {
+        if (!state.bag.length) newBag();
+        let candidates;
+        if (state.mode === 'test' || state.mode === 'practice') {
+          // Bei den zehn Aufgaben keine Wiederholung, auch nicht als Tauschaufgabe.
+          candidates = state.bag.filter(q => !state.testUsedPairs.has(unorderedKey(q)));
+        } else if (state.mode === 'speed') {
+          // Im Zeitmodus zunächst jede verfügbare Aufgabe einmal. Erst danach
+          // neue, nach Schwierigkeit gewichtete Durchläufe (auch Tauschaufgaben).
+          candidates = state.bag.filter(q => !state.speedUsedPairs.has(unorderedKey(q)));
+          if (!candidates.length) {
+            state.speedUsedPairs.clear();
+            candidates = state.bag.filter(q => unorderedKey(q) !== (state.current ? unorderedKey(state.current) : ''));
+            if (!candidates.length) candidates = state.bag;
+          }
+        } else {
+          const farEnough = state.bag.filter(q =>
+            state.questionIndex - (state.lastSeen.get(q.id) ?? -100) >= 2);
+          candidates = farEnough.length ? farEnough :
+            state.bag.filter(q => q.id !== state.lastId);
+          if (!candidates.length) candidates = state.bag;
+        }
+        if (!candidates.length) return null;
+        // Zuerst die ausgewählten Reihen entsprechend ihrer Schwierigkeit gewichten,
+        // dann innerhalb jeder Reihe ebenfalls bevorzugt schwierige Rechnungen ziehen.
+        // Knifflige 5 sind eine zusätzliche, starke Gruppe. Überschneidungen
+        // addieren ihre Gewichtung, aber nicht die Zahl der Aufgaben im Pool.
+        const rowPriority = { 1: 1, 2: 1.6, 3: 2.3, 4: 2.8, 5: 2.8,
+          6: 2.8, 7: 4.1, 8: 4.1, 9: 2.8, 10: 1.6 };
+        const sources = [...state.selected].map(n => ({ key: String(n), weight: rowPriority[n] || 1 }));
+        if (state.hardFourSelected) sources.push({ key: 'knifflig', weight: 5.5 });
+        const sumWithinSource = new Map();
+        for (const source of sources) {
+          const inGroup = candidates.filter(q => source.key === 'knifflig'
+            ? HARD_FOUR_IDS.includes(q.id) : String(q.a) === source.key);
+          sumWithinSource.set(source.key, inGroup.reduce((sum, q) => sum + practiceWeight(q), 0));
+        }
+        const scored = candidates.map(q => {
+          const base = practiceWeight(q);
+          let weight = 0;
+          for (const source of sources) {
+            const belongs = source.key === 'knifflig' ? HARD_FOUR_IDS.includes(q.id) : String(q.a) === source.key;
+            const total = sumWithinSource.get(source.key);
+            if (belongs && total > 0) weight += source.weight * base / total;
+          }
+          return { q, weight };
+        });
+        const total = scored.reduce((sum, item) => sum + item.weight, 0);
+        let pick = Math.random() * total;
+        for (const item of scored) {
+          pick -= item.weight;
+          if (pick < 0) return item.q;
+        }
+        return scored[scored.length - 1].q;
+      }
+      function displayOrder(q) {
+        // Die Aufgaben-ID bleibt für den Lernfortschritt unverändert; nur die
+        // sichtbare Reihenfolge der beiden Faktoren wird angepasst.
+        if (q.a === q.b) return q;
+        // Die fünfte Zusatzaufgabe wird in beiden Richtungen gezeigt;
+        // ihr Fortschritt wird dennoch unter einer gemeinsamen ID gezählt.
+        if (q.id === '3-17') return Math.random() < .5 ? q : { ...q, a: q.b, b: q.a };
+        if (state.mode === 'learn' && state.learnOrder === 'back') {
+          // In den Reihen a x b ist a die gewählte Reihenzahl:
+          // daraus wird b x a, z. B. 7 x 3 -> 3 x 7.
+          // Bei ausschließlich Kniffligen 5 bleiben die vier festen Aufgaben.
+          if (state.hardFourSelected && !state.selected.size) return q;
+          return { ...q, a: q.b, b: q.a };
+        }
+        // Bei Test und Zeitmodus immer gemischt, beim Lernen nur auf Wunsch.
+        // Der Unterschied zwischen vorne/hinten bleibt gering, ohne starre Abfolge.
+        let showBack;
+        if (state.shownDirections.back >= state.shownDirections.front + 2) showBack = false;
+        else if (state.shownDirections.front >= state.shownDirections.back + 2) showBack = true;
+        else showBack = Math.random() < .5;
+        state.shownDirections[showBack ? 'back' : 'front']++;
+        return showBack ? { ...q, a: q.b, b: q.a } : q;
+      }
+      function nextPair() {
+        let next = null;
+        if (state.mode === 'learn') {
+          const due = state.reviewQueue.findIndex(item => {
+            const rec = state.progress[item.id];
+            return item.due <= state.questionIndex + 1 && isEnabledQuestion(item.id) &&
+              (Number(rec?.streak) || 0) < rowTarget(Number(item.id.split('-')[0])) &&
+              state.questionIndex - (state.lastSeen.get(item.id) ?? -100) >= 3;
+          });
+          if (due >= 0) {
+            const item = state.reviewQueue.splice(due, 1)[0];
+            next = pairFromId(item.id);
+          }
+        }
+        if (!next) next = weightedRandomPair();
+        if (!next) throw new Error('Keine weitere Aufgabe im Übungspool');
+        state.questionIndex++;
+        state.questionCounts.set(next.id, (state.questionCounts.get(next.id) || 0) + 1);
+        if (state.mode === 'test' || state.mode === 'practice') state.testUsedPairs.add(unorderedKey(next));
+        if (state.mode === 'speed') state.speedUsedPairs.add(unorderedKey(next));
+        state.lastSeen.set(next.id, state.questionIndex);
+        state.lastId = next.id;
+        return displayOrder(next);
+      }
+      function stopTimer() {
+        if (state.timerId !== null) clearInterval(state.timerId);
+        state.timerId = null;
+      }
+      function startMode(mode) {
+        if (availableQuestionCount() === 0 || !Object.hasOwn(modes, mode)) return;
+        if (['test','practice'].includes(mode) && availableQuestionCount(true) < 10) return;
+        stopTimer();
+        state.sessionId++;
+        state.mode = mode;
+        state.bag = [];
+        state.reviewQueue = [];
+        state.lastSeen = new Map();
+        state.questionCounts = new Map();
+        state.testUsedPairs = new Set();
+        state.speedUsedPairs = new Set();
+        state.shownDirections = { front: 0, back: 0 };
+        state.sessionErrors = new Map();
+        state.lastId = null;
+        state.questionIndex = 0;
+        state.completed = 0;
+        state.correct = 0;
+        state.lastLearnBreak = 0;
+        state.mistakes = [];
+        state.locked = false;
+        state.secondsLeft = 60;
+        state.finishAt = 0;
+        if (mode === 'learn') seedReviews();
+        const selection = [...state.selected].sort((a, b) => a - b);
+        byId('practiceSeries').textContent = selection.length === 0 && state.hardFourSelected ? '⭐ Knifflige 5' :
+          selection.length === 10 ? (state.hardFourSelected ? 'Alle Reihen + Knifflige 5' : 'Alle 1×1-Reihen') :
+          `Reihen: ${selection.join(', ')}${state.hardFourSelected ? ' + Knifflige 5' : ''}`;
+        byId('practiceMode').textContent = modes[mode];
+        byId('progressTrack').hidden = mode === 'learn';
+        byId('progressTrack').classList.toggle('timer-track', mode === 'speed');
+        byId('progressTrack').setAttribute('aria-label', mode === 'speed' ? 'Vergangene Zeit' : 'Beantwortete Aufgaben');
+        byId('progressFill').style.removeProperty('--elapsed');
+        if (mode === 'speed') state.finishAt = Date.now() + 60000;
+        showScreen('practice');
+        showNextQuestion();
+        if (mode === 'speed') {
+          const session = state.sessionId;
+          state.timerId = setInterval(() => {
+            if (session !== state.sessionId || state.mode !== 'speed') return;
+            state.secondsLeft = Math.max(0, Math.ceil((state.finishAt - Date.now()) / 1000));
+            updateStatus();
+            if (state.secondsLeft <= 0) finishRound();
+          }, 100);
+        }
+      }
+      function updateStatus() {
+        byId('practiceProgress').classList.toggle('test-progress', ['test','practice'].includes(state.mode));
+        if (state.mode === 'learn') {
+          byId('practiceProgress').textContent = `Richtig: ${state.correct} von ${state.completed} Aufgaben`;
+        } else if (['test','practice'].includes(state.mode)) {
+          byId('practiceProgress').innerHTML = `<span>Frage ${Math.min(state.questionIndex, 10)} von 10</span><span class="test-progress-divider" aria-hidden="true">|</span><span>Richtig: ${state.correct} von ${state.completed}</span>`;
+          byId('progressFill').style.width = `${state.completed * 10}%`;
+          byId('progressTrack').setAttribute('aria-valuenow', String(state.completed * 10));
+        } else if (state.mode === 'speed') {
+          byId('practiceProgress').textContent = `Noch ${state.secondsLeft} Sekunden · ${state.correct} richtig`;
+          const elapsed = Math.max(0, Math.min(100, (60000 - (state.finishAt - Date.now())) / 600));
+          byId('progressFill').style.width = '100%';
+          byId('progressFill').style.setProperty('--elapsed', `${elapsed}%`);
+          byId('progressTrack').setAttribute('aria-valuenow', String(Math.round(elapsed)));
+        }
+      }
+      function showNextQuestion() {
+        if (state.mode === 'speed' && Date.now() >= state.finishAt && state.finishAt) return finishRound();
+        if (!state.mode) return;
+        byId('learnBreak').hidden = true;
+        byId('questionBox').hidden = false;
+        state.current = nextPair();
+        state.locked = false;
+        state.attempts = 0;
+        state.wrongAnswers = [];
+        state.awaitingRetryInput = false;
+        state.answerColor = '';
+        state.answer = '';
+        byId('question').innerHTML = `${state.current.a} <span class="multiply">×</span> ${state.current.b} = ?`;
+        byId('questionBox').classList.remove('show-solution');
+        byId('rememberLabel').hidden = true;
+        byId('wrongAttempts').hidden = true;
+        byId('wrongAttempts').textContent = '';
+        byId('rememberNote').hidden = true;
+        byId('answerArea').hidden = false;
+        byId('keypad').hidden = false;
+        byId('feedback').textContent = '';
+        byId('feedback').className = 'answer-caption feedback';
+        byId('nextButton').hidden = true;
+        updateAnswer();
+        updateStatus();
+      }
+      function updateAnswer() {
+        const display = byId('answerDisplay');
+        display.textContent = state.answer || '?';
+        display.classList.toggle('empty', !state.answer);
+        display.classList.toggle('correct', state.answerColor === 'correct');
+        display.classList.toggle('wrong', state.answerColor === 'wrong');
+        const active = !state.locked && state.mode !== null && !(state.mode === 'speed' && Date.now() >= state.finishAt);
+        document.querySelectorAll('#keypad [data-digit], #erase').forEach(b => { b.disabled = !active; });
+        byId('checkAnswer').disabled = !active || !state.answer || state.awaitingRetryInput;
+      }
+      function enterDigit(digit) {
+        if (state.locked || !state.mode || (state.mode === 'speed' && Date.now() >= state.finishAt)) return;
+        if (state.awaitingRetryInput) {
+          state.answer = '';
+          state.awaitingRetryInput = false;
+          showFeedback('2. Versuch', 'hint');
+        }
+        if (state.answer.length < 3) state.answer += digit;
+        state.answerColor = '';
+        updateAnswer();
+      }
+      function deleteDigit() {
+        if (state.locked || !state.mode) return;
+        if (state.awaitingRetryInput) {
+          state.answer = '';
+          state.awaitingRetryInput = false;
+          showFeedback('2. Versuch', 'hint');
+        } else state.answer = state.answer.slice(0, -1);
+        state.answerColor = '';
+        updateAnswer();
+      }
+      function showFeedback(text, type) {
+        const el = byId('feedback');
+        el.textContent = text;
+        el.className = `answer-caption feedback ${type}`;
+      }
+      function askLearningBreak() {
+        // Nicht mitten in einer Aufgabe fragen, sondern unmittelbar vor der nächsten.
+        // Jede abgeschlossene Aufgabe zählt, auch eine mit zwei Fehlversuchen.
+        if (state.mode !== 'learn' || state.completed < 15 || state.completed % 5 !== 0 ||
+            state.lastLearnBreak === state.completed) return false;
+        state.lastLearnBreak = state.completed;
+        byId('breakHeading').textContent = `${state.completed} Aufgaben geschafft!`;
+        byId('questionBox').hidden = true;
+        byId('keypad').hidden = true;
+        byId('learnBreak').hidden = false;
+        state.locked = true;
+        byId('breakContinue').focus({ preventScroll: true });
+        return true;
+      }
+      function continueAfterQuestion() {
+        if (showAwardIfPending()) return;
+        if (['test','practice'].includes(state.mode) && state.completed >= 10) finishRound();
+        else if (state.mode === 'speed' && Date.now() >= state.finishAt) finishRound();
+        else if (!askLearningBreak()) showNextQuestion();
+      }
+      function advanceSoon(delayMs) {
+        const session = state.sessionId;
+        setTimeout(() => {
+          if (session !== state.sessionId || state.mode === null || byId('practiceScreen').hidden) return;
+          continueAfterQuestion();
+        }, delayMs);
+      }
+      // Zeige die richtige Rechnung groß im bisherigen Aufgabenfeld (keine Meldung unter den Zahlentasten).
+      function showRememberSolution(q, allowManualNext, wrongAnswers = []) {
+        const attempts = byId('wrongAttempts');
+        attempts.textContent = wrongAnswers.map(value => `${value} falsch`).join(' · ');
+        attempts.hidden = wrongAnswers.length === 0;
+        byId('question').innerHTML = `${q.a} <span class="multiply">×</span> ${q.b} = ${q.product}`;
+        byId('questionBox').classList.add('show-solution');
+        byId('rememberLabel').hidden = false;
+        byId('rememberNote').hidden = false;
+        byId('answerArea').hidden = true;
+        byId('keypad').hidden = true;
+        byId('feedback').textContent = '';
+        byId('nextButton').hidden = !allowManualNext;
+        requestAnimationFrame(() => {
+          if (state.locked && state.mode !== null && !byId('practiceScreen').hidden && byId('questionBox').classList.contains('show-solution')) {
+            byId('questionBox').scrollIntoView({ block: 'nearest', behavior: 'instant' });
+          }
+        });
+      }
+      function checkAnswer() {
+        if (state.locked || !state.current || !state.answer || state.awaitingRetryInput) return;
+        if (state.mode === 'speed' && Date.now() >= state.finishAt) return finishRound();
+        // Nur ein tatsächlich beantworteter Übungstag zählt, nicht das bloße Öffnen.
+        markFirstTraining(state.mode);
+        const q = state.current;
+        const given = Number(state.answer);
+        const correct = given === q.product;
+        if (!correct) state.sessionErrors.set(q.id, (state.sessionErrors.get(q.id) || 0) + 1);
+        state.answerColor = correct ? 'correct' : 'wrong';
+        if (state.mode === 'learn') {
+          if (correct) {
+            const fromFirst = state.attempts === 0;
+            noteCompleted(q, fromFirst ? 'first' : 'second');
+            state.correct++;
+            state.completed++;
+            state.locked = true;
+            if (!fromFirst) scheduleReview(q, 5);
+            else if (Number(recordFor(q.id).firstWrong) > 0 && recordFor(q.id).streak < rowTarget(Number(q.id.split('-')[0]))) scheduleReview(q, 8);
+            showFeedback('Richtig! ✓', 'correct');
+            updateStatus();
+            updateAnswer();
+            checkForAward();
+            advanceSoon(fromFirst ? 650 : 950);
+          } else if (state.attempts === 0) {
+            noteFirstMistake(q);
+            state.attempts = 1;
+            state.awaitingRetryInput = true;
+            showFeedback('Noch ein Versuch.', 'wrong');
+            updateAnswer();
+          } else {
+            noteCompleted(q, 'missed');
+            state.mistakes.push({ ...q });
+            state.completed++;
+            state.locked = true;
+            scheduleReview(q, 4);
+            showFeedback('Falsch', 'wrong');
+            updateStatus();
+            updateAnswer(); // Zweite falsche Antwort bleibt zunächst rot sichtbar.
+            const session = state.sessionId;
+            const questionId = q.id;
+            setTimeout(() => {
+              if (session !== state.sessionId || state.mode !== 'learn' ||
+                  !state.current || state.current.id !== questionId ||
+                  byId('practiceScreen').hidden) return;
+              showRememberSolution(q, true);
+            }, 1000);
+          }
+          return;
+        }
+        if (state.mode === 'test' || state.mode === 'practice') {
+          if (correct) {
+            state.correct++;
+            state.completed++;
+            noteCompleted(q, state.attempts === 0 ? 'first' : 'second');
+            state.locked = true;
+            showFeedback('Richtig! ✓', 'correct');
+            updateStatus();
+            updateAnswer();
+            advanceSoon(state.attempts === 0 ? 700 : 950);
+          } else if (state.attempts === 0) {
+            state.wrongAnswers.push(given);
+            noteFirstMistake(q);
+            state.attempts = 1;
+            state.awaitingRetryInput = true;
+            showFeedback('Noch ein Versuch.', 'wrong');
+            updateAnswer();
+          } else {
+            state.wrongAnswers.push(given);
+            state.completed++;
+            noteCompleted(q, 'missed');
+            // Die falschen Eingaben sind nur für die kurze Lernrückmeldung sichtbar,
+            // nicht auf der späteren Ergebnisliste.
+            state.mistakes.push({ ...q });
+            state.locked = true;
+            showFeedback('Falsch', 'wrong');
+            updateStatus();
+            updateAnswer();
+            const session = state.sessionId;
+            const questionId = q.id;
+            // Zuerst bleibt der zweite Fehler als rote Zahl gut sichtbar.
+            setTimeout(() => {
+              if (session !== state.sessionId || !['test','practice'].includes(state.mode) ||
+                  !state.current || state.current.id !== questionId ||
+                  byId('practiceScreen').hidden) return;
+              // Danach ohne neue Aufgabenfrage: beide Versuche rot über der grünen Lösung.
+              showRememberSolution(q, false, state.wrongAnswers);
+              // Danach wie bisher Zeit zum Merken, bevor die nächste Aufgabe kommt.
+              advanceSoon(3200);
+            }, 950);
+          }
+          return;
+        }
+        // 60 Sekunden: keine zweite Chance, damit das Tempo erhalten bleibt.
+        state.completed++;
+        if (correct) {
+          state.correct++;
+          noteCompleted(q, 'first');
+          showFeedback('Richtig! ✓', 'correct');
+        } else {
+          noteFirstMistake(q);
+          noteCompleted(q, 'missed');
+          state.mistakes.push({ ...q });
+          showFeedback(`Richtig ist: ${q.a} × ${q.b} = ${q.product}`, 'wrong');
+        }
+        state.locked = true;
+        updateStatus();
+        updateAnswer();
+        advanceSoon(390);
+      }
+      function finishRound() {
+        if (!state.mode || state.mode === 'learn') return;
+        stopTimer();
+        const mode = state.mode;
+        state.sessionId++;
+        state.mode = null;
+        state.locked = true;
+        const resultEmoji = byId('resultEmoji');
+        const resultHeading = byId('resultHeading');
+        const resultScore = byId('resultScore');
+        const resultDescription = byId('resultDescription');
+        byId('resultGrade').hidden = mode !== 'test';
+        byId('gradeScale').hidden = mode !== 'test';
+        if (mode === 'practice' && state.completed === 10) {
+          state.practiceStats.rounds++;
+          state.practiceStats.totalCorrect += state.correct;
+          writeJSON(STORAGE_PRACTICE_STATS, state.practiceStats);
+        } else if (mode === 'test' && state.completed === 10) {
+          state.testStats.rounds++;
+          state.testStats.totalCorrect += state.correct;
+          state.testStats.bestCorrect = Math.max(state.testStats.bestCorrect, state.correct);
+          writeJSON(STORAGE_TEST_STATS, state.testStats);
+        } else if (mode === 'speed' && state.secondsLeft <= 0) {
+          state.speedStats.rounds++;
+          state.speedStats.totalCorrect += state.correct;
+          writeJSON(STORAGE_SPEED_STATS, state.speedStats);
+        }
+        checkForAward();
+        if (mode === 'test') {
+          const mark = state.correct === 10 ? 1 : state.correct === 9 ? 2 :
+            state.correct >= 7 ? 3 : state.correct >= 5 ? 4 : state.correct >= 3 ? 5 : 6;
+          const resultNextIdea = byId('resultNextIdea');
+          byId('resultGrade').textContent = `Note ${mark}`;
+          const perfect = state.correct === 10;
+          resultEmoji.textContent = perfect ? '🏆' : state.correct >= 7 ? '🌟' : '🙂';
+          resultHeading.textContent = 'Test geschafft!';
+          resultScore.textContent = `${state.correct} von 10`;
+          resultDescription.textContent = perfect ? 'Super gemacht!' : state.correct >= 7 ? 'Gut gemacht!' : 'Weiter so!';
+          resultNextIdea.hidden = false;
+          resultNextIdea.textContent = '😊 Probiere jetzt andere Reihen oder mehrere Reihen zusammen.';
+        } else if (mode === 'practice') {
+          resultEmoji.textContent = '🌟';
+          resultHeading.textContent = 'Kleine Übung geschafft!';
+          resultScore.textContent = `${state.correct} von 10`;
+          resultDescription.textContent = PRAISE[Math.floor(Math.random() * PRAISE.length)];
+          byId('resultNextIdea').hidden = false;
+          byId('resultNextIdea').textContent = '😊 Probiere auch andere Reihen!';
+        } else {
+          byId('resultNextIdea').hidden = true;
+          resultEmoji.textContent = state.correct >= 15 ? '🏆' : '⏱️';
+          resultHeading.textContent = 'Deine Minute ist um!';
+          resultScore.textContent = `${state.correct} richtig`;
+          const errors = state.completed - state.correct;
+          const key = [...state.selected].sort((a, b) => a - b).join('-') + (state.hardFourSelected ? '+K5' : '');
+          const records = readJSON(STORAGE_RECORD) || {};
+          const previous = Number(records[key]) || 0;
+          const record = state.correct > previous;
+          if (record) { records[key] = state.correct; writeJSON(STORAGE_RECORD, records); }
+          const best = Math.max(previous, state.correct);
+          resultDescription.textContent = `${state.completed} ${state.completed === 1 ? 'Aufgabe' : 'Aufgaben'} bearbeitet, ${errors} falsch.\n${record ? 'Neuer persönlicher Rekord! 🎉' : `Dein Rekord für diese Reihen: ${best} richtige.`}`;
+        }
+        const list = byId('mistakeList');
+        list.replaceChildren();
+        byId('mistakesBox').hidden = state.mistakes.length === 0;
+        for (const m of [...new Map(state.mistakes.map(m => [m.id, m])).values()].slice(0, 25)) {
+          const li = document.createElement('li');
+          li.textContent = `${m.a} × ${m.b} = ${m.product}`;
+          list.appendChild(li);
+        }
+        const uniqueMistakesCount = new Set(state.mistakes.map(m => m.id)).size;
+        if (uniqueMistakesCount > 25) {
+          const li = document.createElement('li');
+          li.textContent = `… und ${uniqueMistakesCount - 25} weitere`;
+          list.appendChild(li);
+        }
+        state.mode = mode;
+        showScreen('result');
+        showAwardIfPending();
+      }
+      function goToSetup() {
+        stopTimer();
+        state.sessionId++;
+        state.mode = null;
+        state.locked = false;
+        showScreen('setup');
+        updateSkillBorders();
+      }
+      // Die Kopfzeile ist auf allen Ansichten ein echter Home-Button.
+      byId('homeButton').addEventListener('click', () => {
+        if (byId('tableDialog').open) byId('tableDialog').close();
+        if (byId('profilePickDialog').open) byId('profilePickDialog').close();
+        if (byId('renameDialog').open) byId('renameDialog').close();
+        if (byId('resetDialog').open) byId('resetDialog').close();
+        if (byId('awardDialog').open) byId('awardDialog').close();
+        goToSetup();
+      });
+      byId('awardClose').addEventListener('click', () => {
+        byId('awardDialog').close();
+        goToSetup();
+      });
+      // KINDERPROFILE: Eine Speichergruppe pro Kind. Bei jedem Wechsel wird die
+      // neue Gruppe geladen, ohne die Daten des bisherigen Kindes zu berühren.
+      function renderProfiles() {
+        const select = byId('profileSelect');
+        select.replaceChildren();
+        const pick = byId('profilePickButtons'); pick.replaceChildren();
+        for (let i=1; i<=5; i++) {
+          const name = profileMeta.names[i-1] || `Kind ${i}`;
+          const option = document.createElement('option');
+          option.value = String(i); option.textContent = name;
+          select.appendChild(option);
+          const b = document.createElement('button'); b.type='button'; b.textContent=name;
+          b.addEventListener('click', () => chooseProfile(i)); pick.appendChild(b);
+        }
+        select.value = String(activeProfileId);
+        byId('headerChildName').textContent = ` · ${profileName()}`;
+        byId('resetProfileInfo').textContent = `Aktuelles Kind: ${profileName()}. Andere Kinder sind nicht betroffen.`;
+      }
+      function chooseProfile(id) {
+        if (!(id >= 1 && id <= 5)) return;
+        stopTimer(); state.sessionId++;
+        profileMeta.active = id; profileMeta.hasChosen = true;
+        saveProfiles();
+        location.reload();
+      }
+      byId('profileSelect').addEventListener('change', e => chooseProfile(Number(e.target.value)));
+      byId('renameProfile').addEventListener('click', () => {
+        byId('profileNameInput').value = profileName();
+        byId('renameDialog').showModal();
+        byId('profileNameInput').focus();
+      });
+      byId('renameCancel').addEventListener('click', () => byId('renameDialog').close());
+      byId('renameSave').addEventListener('click', () => {
+        const name = byId('profileNameInput').value.trim().replace(/\s+/g,' ').slice(0,24) || `Kind ${activeProfileId}`;
+        profileMeta.names[activeProfileId-1] = name;
+        saveProfiles(); renderProfiles(); byId('renameDialog').close();
+      });
+      byId('profileNameInput').addEventListener('keydown', event => {
+        if (event.key === 'Enter') { event.preventDefault(); byId('renameSave').click(); }
+      });
+      renderProfiles();
+      if (!profileMeta.hasChosen) {
+        window.addEventListener('load', () => {
+          if (!profileMeta.hasChosen) byId('profilePickDialog').showModal();
+        });
+      }
+      const resetDialog = byId('resetDialog');
+      const adultCheck = byId('resetAdultCheck');
+      const resetWord = byId('resetWord');
+      const resetConfirm = byId('resetConfirm');
+      const resetModeChecks = [...document.querySelectorAll('.reset-mode')];
+      const resetAll = byId('resetAll');
+      const keepCups = byId('keepCups');
+      const deleteCups = byId('deleteCups');
+      const newChild = byId('resetNewChild');
+      const selectedResetModes = () => resetModeChecks.filter(el => el.checked).map(el => el.value);
+      function updateResetConfirm() {
+        resetConfirm.disabled = !( (selectedResetModes().length > 0 || newChild.checked) && adultCheck.checked &&
+          resetWord.value.trim().toLocaleUpperCase('de-DE') === 'LÖSCHEN');
+        byId('resetWarning').textContent = newChild.checked
+          ? `Alle Daten und der Name von ${profileName()} werden gelöscht. Andere Kinder bleiben erhalten.`
+          : 'Achtung: Die ausgewählten Ergebnisse werden dauerhaft gelöscht.';
+      }
+      function updateResetSelection() {
+        resetAll.checked = resetModeChecks.every(c => c.checked);
+        updateResetConfirm();
+      }
+      resetAll.addEventListener('change', () => {
+        resetModeChecks.forEach(c => c.checked = resetAll.checked);
+        updateResetConfirm();
+      });
+      resetModeChecks.forEach(check => check.addEventListener('change', updateResetSelection));
+      newChild.addEventListener('change', () => {
+        if (newChild.checked) {
+          resetModeChecks.forEach(c => c.checked = true);
+          resetAll.checked = true;
+          deleteCups.checked = true;
+        }
+        updateResetConfirm();
+      });
+      byId('resetOpen').addEventListener('click', () => {
+        resetAll.checked = false;
+        resetModeChecks.forEach(c => c.checked = false);
+        newChild.checked = false;
+        keepCups.checked = true;
+        adultCheck.checked = false; resetWord.value = '';
+        updateResetConfirm();
+        resetDialog.showModal(); resetAll.focus({preventScroll: true});
+      });
+      adultCheck.addEventListener('change', updateResetConfirm);
+      resetWord.addEventListener('input', updateResetConfirm);
+      byId('resetCancel').addEventListener('click', () => resetDialog.close());
+      resetConfirm.addEventListener('click', () => {
+        updateResetConfirm(); if (resetConfirm.disabled) return;
+        const modesToClear = newChild.checked ? ['learn','practice','test','speed'] : selectedResetModes();
+        const removeCups = newChild.checked || deleteCups.checked;
+        if (modesToClear.includes('learn')) {
+          state.progress = {}; state.reviewQueue = []; state.mistakes = [];
+          writeJSON(STORAGE_PROGRESS, state.progress);
+        }
+        if (modesToClear.includes('practice')) {
+          state.practiceStats = { rounds: 0, totalCorrect: 0 };
+          writeJSON(STORAGE_PRACTICE_STATS, state.practiceStats);
+        }
+        if (modesToClear.includes('test')) {
+          state.testStats = { rounds: 0, totalCorrect: 0, bestCorrect: 0 };
+          writeJSON(STORAGE_TEST_STATS, state.testStats);
+        }
+        if (modesToClear.includes('speed')) {
+          state.speedStats = { rounds: 0, totalCorrect: 0 };
+          writeJSON(STORAGE_SPEED_STATS, state.speedStats);
+          writeJSON(STORAGE_RECORD, {});
+        }
+        for (const mode of modesToClear) {
+          delete state.award.firstDates[mode]; state.award.trainingDates[mode] = [];
+        }
+        // Zurücksetzung eines Teilbereiches darf niemals Pokale der anderen
+        // Kinder berühren und auch nicht die Pokale dieses Kindes ohne Auswahl.
+        if (removeCups) {
+          state.award.trophies = []; state.award.earnedDate = null;
+          state.award.historicalPartial = false;
+        }
+        state.awardPending = false;
+        if (newChild.checked) {
+          profileMeta.names[activeProfileId-1] = `Kind ${activeProfileId}`;
+          state.selected = new Set(allRows); state.hardFourSelected = false;
+          state.learnOrder = 'back';
+          writeJSON(STORAGE_SELECTION, [...state.selected]);
+          writeJSON(STORAGE_HARD_SELECTION, false);
+          writeJSON(STORAGE_LEARN_ORDER, 'back');
+        }
+        writeJSON(STORAGE_AWARD, state.award);
+        resetDialog.close();
+        renderProfiles(); refreshLearningOrderButtons(); updateSelection();
+        updateSkillBorders(); updateAwardDisplay();
+        const status = byId('resetStatus'); status.hidden = false;
+        status.textContent = newChild.checked ? 'Dieser Kinderplatz wurde vollständig zurückgesetzt.' :
+          `Auf null gesetzt: ${modesToClear.map(m => modes[m]).join(', ')}. ${removeCups ? 'Pokale gelöscht.' : 'Pokale behalten.'}`;
+      });
+      function refreshLearningOrderButtons() {
+        document.querySelectorAll('.learning-order-option').forEach(button => {
+          const active = button.dataset.order === state.learnOrder;
+          button.classList.toggle('is-active', active);
+          button.setAttribute('aria-pressed', String(active));
+        });
+      }
+      document.querySelectorAll('.learning-order-option').forEach(button => button.addEventListener('click', () => {
+        state.learnOrder = button.dataset.order === 'mixed' ? 'mixed' : 'back';
+        writeJSON(STORAGE_LEARN_ORDER, state.learnOrder);
+        refreshLearningOrderButtons();
+      }));
+      refreshLearningOrderButtons();
+      document.querySelectorAll('.start-mode').forEach(button => {
+        button.addEventListener('click', () => startMode(button.dataset.mode));
+      });
+      byId('keypad').addEventListener('click', e => {
+        const btn = e.target.closest('[data-digit]');
+        if (btn) enterDigit(btn.dataset.digit);
+      });
+      byId('erase').addEventListener('click', deleteDigit);
+      byId('checkAnswer').addEventListener('click', checkAnswer);
+      byId('nextButton').addEventListener('click', continueAfterQuestion);
+      byId('breakContinue').addEventListener('click', () => {
+        if (state.mode !== 'learn' || byId('learnBreak').hidden) return;
+        showNextQuestion();
+      });
+      byId('breakFinish').addEventListener('click', () => {
+        if (state.mode === 'learn') goToSetup();
+      });
+      byId('backFromPractice').addEventListener('click', goToSetup);
+      byId('backFromResult').addEventListener('click', goToSetup);
+      byId('retryButton').addEventListener('click', () => startMode(state.mode));
+      document.addEventListener('keydown', e => {
+        if (byId('tableDialog').open || byId('resetDialog').open || byId('renameDialog').open || byId('profilePickDialog').open || byId('practiceScreen').hidden || e.altKey || e.ctrlKey || e.metaKey) return;
+        if (!byId('learnBreak').hidden) {
+          if (e.key === 'Enter') { e.preventDefault(); showNextQuestion(); }
+          return;
+        }
+        if (/^[0-9]$/.test(e.key)) { e.preventDefault(); enterDigit(e.key); }
+        else if (e.key === 'Backspace') { e.preventDefault(); deleteDigit(); }
+        else if (e.key === 'Enter') {
+          e.preventDefault();
+          if (state.mode === 'learn' && state.locked && !byId('nextButton').hidden) continueAfterQuestion();
+          else checkAnswer();
+        }
+      });
+      const table = byId('timesTable');
+      const head = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      for (const item of ['×', ...allRows]) {
+        const th = document.createElement('th');
+        th.scope = 'col';
+        th.textContent = item;
+        headerRow.appendChild(th);
+      }
+      head.appendChild(headerRow);
+      table.appendChild(head);
+      const body = document.createElement('tbody');
+      for (const a of allRows) {
+        const tr = document.createElement('tr');
+        const th = document.createElement('th');
+        th.scope = 'row';
+        th.textContent = a;
+        tr.appendChild(th);
+        for (const b of allRows) {
+          const td = document.createElement('td');
+          td.dataset.row = a;
+          td.dataset.col = b;
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = a * b;
+          button.setAttribute('aria-label', `${a} mal ${b} ist ${a * b}`);
+          button.addEventListener('click', () => {
+            byId('tableHighlight').textContent = `${a} × ${b} = ${a * b}`;
+            body.querySelectorAll('td').forEach(cell => {
+              cell.classList.toggle('active-line', Number(cell.dataset.row) === a || Number(cell.dataset.col) === b);
+              cell.classList.toggle('active-cell', cell === td);
+            });
+          });
+          td.appendChild(button);
+          tr.appendChild(td);
+        }
+        body.appendChild(tr);
+      }
+      table.appendChild(body);
+      document.querySelectorAll('.open-table').forEach(button => button.addEventListener('click', () => {
+        byId('tableDialog').showModal();
+      }));
+      byId('closeTable').addEventListener('click', () => byId('tableDialog').close());
+      byId('tableDialog').addEventListener('click', event => {
+        if (event.target === byId('tableDialog')) byId('tableDialog').close();
+      });
+      updateSelection();
+      updateAwardDisplay();
+      // Als einzelne HTML-Datei offline nutzbar. Auf HTTPS speichert die PWA alle App-Dateien zwischen.
+      if ('serviceWorker' in navigator && location.protocol === 'https:') {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

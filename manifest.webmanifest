@@ -1,5 +1,5 @@
 {
-  "name": "1×1 Training mit Caren – Einmaleins-Trainer",
+  "name": "1×1 Training mit Caren",
   "short_name": "1×1 mit Caren",
   "description": "Einmaleins mit Caren lernen, testen und offline üben.",
   "lang": "de",
@@ -13,19 +13,13 @@
       "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "./icon-maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ]
 }
